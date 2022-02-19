@@ -2,6 +2,7 @@ package immune
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 )
@@ -13,15 +14,15 @@ type VariableMap struct {
 func (v VariableMap) GetString(key string) (string, bool) {
 	value, ok := v.variableToValue[key]
 	if !ok {
-		return "", ok
+		return "", false
 	}
 
 	str, ok := value.(string)
-	if !ok {
-		return "", ok
+	if ok {
+		return str, true
 	}
 
-	return str, true
+	return fmt.Sprintf("%s", value), true
 }
 
 func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, resp M) error {
@@ -36,7 +37,7 @@ func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, res
 		case string, int, int8, int32, int16, int64:
 			break
 		default:
-			return errors.Errorf("unsupported variable type: %T", value)
+			return errors.Errorf("variable %s is of type %T in the response body, only string & integer is currently supported", varName, value)
 		}
 
 		v.variableToValue[varName] = value
