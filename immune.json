@@ -1,0 +1,93 @@
+{
+    "base_url": "http://127.0.0.1:5005/api/v1",
+    "setup_test_cases": [
+        {
+            "store_response_variables": {
+                "app_id": "uid",
+                "group_id": "group_id"
+            },
+            "http_method": "POST",
+            "endpoint": "/applications",
+            "request_body": {
+                "app_name": "test_app",
+                "support_email": "test@app.com"
+            },
+            "response_body": {
+                "uid": "type::uuid",
+                "group_id": "type::uuid",
+                "name": "Lamont Stoltenberg",
+                "events": 0,
+                "support_email": "test@app.com",
+                "endpoints": [],
+                "created_at": "type::datetime",
+                "updated_at": "type::datetime"
+            }
+        },
+        {
+            "store_response_variables": {
+                "endpoint_id": "uid"
+            },
+            "http_method": "POST",
+            "endpoint": "/applications/{app_id}/endpoints",
+            "request_body": {
+                "url": "https://12.44.442.ngrok.io",
+                "secret": "12345",
+                "description": "Local ngrok endpoint",
+                "events": [
+                    "payment.failed",
+                    "payment.success"
+                ]
+            },
+            "response_body": {
+                "uid": "type::uuid",
+                "group_id": "type::uuid",
+                "name": "Lamont Stoltenberg",
+                "events": 0,
+                "support_email": "test@app.com",
+                "endpoints": [],
+                "created_at": "type::datetime",
+                "updated_at": "type::datetime"
+            }
+        }
+    ],
+    "test_cases": [
+        {
+            "http_method": "POST",
+            "endpoint": "/event",
+            "callback": {
+                "body": {
+                    "marvel": "stark"
+                }
+            },
+            "request_body": {
+                "app_id": "The knightly country give apple.",
+                "event_type": "The repelling metal watch hurriedly but open child totally hungrily.",
+                "data": {
+                    "sc": "gene",
+                    "marvel": "stark"
+                }
+            },
+            "response_body": {
+                "app_metadata": {
+                    "uid": "The aloof board happily jump the jealous band.",
+                    "title": "An obnoxious world warmly clap a staff.",
+                    "group_id": "The terrible dream cautiously fly the frail milk tensely under a dull woman.",
+                    "support_email": "An envious bread drink."
+                },
+                "matched_endpoints": 1,
+                "provider_id": "The rhythm clap a crowd indeed courageously over a purple happiness.",
+                "data": {
+                    "spark": "gene"
+                },
+                "uid": "type::uuid",
+                "group_id": "type::uuid",
+                "name": "Lamont Stoltenberg",
+                "events": 0,
+                "support_email": "test@app.com",
+                "endpoints": [],
+                "created_at": "type::datetime",
+                "updated_at": "type::datetime"
+            }
+        }
+    ]
+}
