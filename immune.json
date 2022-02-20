@@ -12,16 +12,7 @@
                 "app_name": "test_app",
                 "support_email": "test@app.com"
             },
-            "response_body": {
-                "uid": "type::uuid",
-                "group_id": "type::uuid",
-                "name": "Lamont Stoltenberg",
-                "events": 0,
-                "support_email": "test@app.com",
-                "endpoints": [],
-                "created_at": "type::datetime",
-                "updated_at": "type::datetime"
-            }
+            "response_body": true
         },
         {
             "store_response_variables": {
@@ -38,16 +29,7 @@
                     "payment.success"
                 ]
             },
-            "response_body": {
-                "uid": "type::uuid",
-                "group_id": "type::uuid",
-                "name": "Lamont Stoltenberg",
-                "events": 0,
-                "support_email": "test@app.com",
-                "endpoints": [],
-                "created_at": "type::datetime",
-                "updated_at": "type::datetime"
-            }
+            "response_body": true
         }
     ],
     "test_cases": [
@@ -67,27 +49,7 @@
                     "marvel": "stark"
                 }
             },
-            "response_body": {
-                "app_metadata": {
-                    "uid": "The aloof board happily jump the jealous band.",
-                    "title": "An obnoxious world warmly clap a staff.",
-                    "group_id": "The terrible dream cautiously fly the frail milk tensely under a dull woman.",
-                    "support_email": "An envious bread drink."
-                },
-                "matched_endpoints": 1,
-                "provider_id": "The rhythm clap a crowd indeed courageously over a purple happiness.",
-                "data": {
-                    "spark": "gene"
-                },
-                "uid": "type::uuid",
-                "group_id": "type::uuid",
-                "name": "Lamont Stoltenberg",
-                "events": 0,
-                "support_email": "test@app.com",
-                "endpoints": [],
-                "created_at": "type::datetime",
-                "updated_at": "type::datetime"
-            }
+            "response_body": true
         }
     ]
 }
