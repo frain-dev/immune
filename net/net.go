@@ -20,8 +20,18 @@ type Net struct {
 	s                      *callback.Server
 	client                 *http.Client
 	vm                     *immune.VariableMap
-	maxCallbackWaitSeconds int
+	maxCallbackWaitSeconds uint
 	baseURL                string
+}
+
+func NewNet(s *callback.Server, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string) *Net {
+	return &Net{
+		s:                      s,
+		client:                 client,
+		vm:                     vm,
+		maxCallbackWaitSeconds: maxCallbackWaitSeconds,
+		baseURL:                baseURL,
+	}
 }
 
 func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTestCase) error {
@@ -124,7 +134,7 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 		cctx, cancel := context.WithTimeout(context.Background(), time.Duration(n.maxCallbackWaitSeconds)*time.Second)
 		defer cancel()
 
-		for i := 1; i <= tc.Callback.Times; i++ {
+		for i := uint(1); i <= tc.Callback.Times; i++ {
 			select {
 			case <-cctx.Done():
 				log.Infof("succesfully received %d callbacks for test_case %d before max callback wait seconds elapsed", i, tc.Position)
