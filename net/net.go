@@ -36,9 +36,14 @@ func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTes
 	}
 
 	r := &request{
-		body:   setupTC.RequestBody,
 		url:    result,
+		body:   setupTC.RequestBody,
 		method: setupTC.HTTPMethod,
+	}
+
+	err = r.processWithVariableMap(n.vm)
+	if err != nil {
+		return errors.Wrapf(err, "setup_test_case %d: failed to process request body with variable map", setupTC.Position)
 	}
 
 	resp, err := n.sendRequest(ctx, r)
@@ -89,6 +94,11 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 		method: tc.HTTPMethod,
 	}
 
+	err = r.processWithVariableMap(n.vm)
+	if err != nil {
+		return errors.Wrapf(err, "test_case %d: failed to process request body with variable map", tc.Position)
+	}
+
 	resp, err := n.sendRequest(ctx, r)
 	if err != nil {
 		return err
@@ -127,21 +137,6 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 	}
 
 	return nil
-}
-
-type request struct {
-	body   immune.M
-	url    string
-	method immune.Method
-}
-
-type response struct {
-	statusCode int
-	body       []byte
-}
-
-func (resp *response) Decode(out interface{}) error {
-	return json.Unmarshal(resp.body, out)
 }
 
 func (n *Net) sendRequest(ctx context.Context, r *request) (*response, error) {
