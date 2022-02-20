@@ -8,11 +8,11 @@ import (
 )
 
 type VariableMap struct {
-	variableToValue M
+	VariableToValue M
 }
 
 func (v VariableMap) GetString(key string) (string, bool) {
-	value, ok := v.variableToValue[key]
+	value, ok := v.VariableToValue[key]
 	if !ok {
 		return "", false
 	}
@@ -26,7 +26,7 @@ func (v VariableMap) GetString(key string) (string, bool) {
 }
 
 func (v VariableMap) Get(key string) (interface{}, bool) {
-	value, ok := v.variableToValue[key]
+	value, ok := v.VariableToValue[key]
 	return value, ok
 }
 
@@ -45,7 +45,7 @@ func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, res
 			return errors.Errorf("variable %s is of type %T in the response body, only string & integer is currently supported", varName, value)
 		}
 
-		v.variableToValue[varName] = value
+		v.VariableToValue[varName] = value
 	}
 
 	return nil
