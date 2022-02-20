@@ -33,7 +33,7 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 					return errors.Errorf("variable %s does not exist in variable map")
 				}
 
-				m[k] = value
+				m[k] = value // replace m[k] with the variable value
 			}
 		case immune.M: // TODO: may cause issues and have to change to  map[string]interface{}
 			return r.traverse(v.(immune.M), vm)
