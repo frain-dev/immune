@@ -25,6 +25,11 @@ func (v VariableMap) GetString(key string) (string, bool) {
 	return fmt.Sprintf("%s", value), true
 }
 
+func (v VariableMap) Get(key string) (interface{}, bool) {
+	value, ok := v.variableToValue[key]
+	return value, ok
+}
+
 func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, resp M) error {
 	for varName, field := range variableToField {
 		value, ok := resp[field]
