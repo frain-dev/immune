@@ -2,14 +2,21 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/frain-dev/immune/system"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 func main() {
+	err := os.Setenv("TZ", "") // Use UTC by default :)
+	if err != nil {
+		log.WithError(err).Fatal("failed to set env")
+	}
+
 	log.SetLevel(log.InfoLevel)
 
 	log.SetFormatter(&prefixed.TextFormatter{
@@ -22,7 +29,24 @@ func main() {
 	cmd := &cobra.Command{
 		Use:   "Immune",
 		Short: "API Testing tool",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	}
+
+	var configFile string
+	cmd.PersistentFlags().StringVar(&configFile, "config", "./immune.json", "Configuration file for immune")
+
+	cmd.AddCommand(addRunCommand())
+
+	if err := cmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func addRunCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "run",
+		Aliases: []string{"serve", "s"},
+		Short:   "Start the HTTP server",
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cfgPath, err := cmd.Flags().GetString("config")
 			if err != nil {
 				return err
@@ -45,15 +69,6 @@ func main() {
 
 			return nil
 		},
-		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-			return nil
-		},
 	}
-
-	var configFile string
-	cmd.PersistentFlags().StringVar(&configFile, "config", "", "Configuration file for immune")
-	if err := cmd.Execute(); err != nil {
-		log.Fatal(err)
-	}
-
+	return cmd
 }
