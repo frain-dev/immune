@@ -17,7 +17,7 @@ func Parse(s string) (*URL, error) {
 		return nil, errors.New("url is empty")
 	}
 
-	u := &URL{segments: []*segment{}}
+	u := &URL{segments: []*segment{}, url: s}
 
 	for {
 		seg := nextSegment(s)
@@ -33,9 +33,14 @@ func Parse(s string) (*URL, error) {
 }
 
 func (u *URL) ProcessWithVariableMap(vm *immune.VariableMap) (string, error) {
+	if len(u.segments) == 0 {
+		return u.url, nil
+	}
+
 	var result string
 
 	url := u.url
+
 	for _, s := range u.segments {
 		v, ok := vm.GetString(s.name)
 		if !ok {
