@@ -11,6 +11,7 @@ import (
 
 type Server struct {
 	outbound chan struct{}
+	stop     chan struct{}
 	s        *http.Server
 }
 
@@ -32,7 +33,11 @@ func NewServer(cfg Config) (*Server, error) {
 		Handler: mux,
 	}
 
-	return &Server{outbound: outbound, s: srv}, nil
+	return &Server{
+		stop:     make(chan struct{}),
+		outbound: outbound,
+		s:        srv,
+	}, nil
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -44,17 +49,29 @@ func (s *Server) Start(ctx context.Context) error {
 	}()
 
 	go func() {
-		<-ctx.Done()
-		cctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-
-		err := s.s.Shutdown(cctx)
-		if err != nil {
-			log.WithError(err).Fatal("failed to shutdown callback server")
+		select {
+		case <-ctx.Done():
+			s.gracefulShutdown()
+		case <-s.stop:
+			s.gracefulShutdown()
 		}
 	}()
 
 	return nil
+}
+
+func (s *Server) Stop() {
+	close(s.stop)
+}
+
+func (s *Server) gracefulShutdown() {
+	cctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := s.s.Shutdown(cctx)
+	if err != nil {
+		log.WithError(err).Fatal("failed to shutdown callback server")
+	}
 }
 
 func (s *Server) ReceiveCallback() struct{} {
