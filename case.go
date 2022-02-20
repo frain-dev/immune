@@ -1,13 +1,5 @@
 package immune
 
-type System struct {
-	BaseURL                string          `json:"base_url"`
-	MaxCallbackWaitSeconds int             `json:"max_callback_wait_seconds"`
-	Variables              VariableMap     `json:"-"`
-	SetupTestCases         []SetupTestCase `json:"setup_test_cases"`
-	TestCases              []TestCase      `json:"test_cases"`
-}
-
 type SetupTestCase struct {
 	StoreResponseVariables S      `json:"store_response_variables"`
 	RequestBody            M      `json:"request_body"`
@@ -34,5 +26,5 @@ type TestCase struct {
 
 type Callback struct {
 	Enabled bool
-	Times   int
+	Times   uint
 }
