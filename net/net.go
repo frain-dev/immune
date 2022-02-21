@@ -63,7 +63,7 @@ func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTes
 	}
 
 	if setupTC.ResponseBody {
-		if len(resp.body) == 0 {
+		if resp.body.Len() == 0 {
 			return errors.Wrapf(err, "setup_test_case %d: wants response body but got no response body", setupTC.Position)
 		}
 
@@ -80,8 +80,8 @@ func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTes
 			}
 		}
 	} else {
-		if len(resp.body) > 0 {
-			return errors.Wrapf(err, "setup_test_case %d: does not want a response body but got a response body: '%s'", setupTC.Position, string(resp.body))
+		if resp.body.Len() > 0 {
+			return errors.Wrapf(err, "setup_test_case %d: does not want a response body but got a response body: '%s'", setupTC.Position, resp.body.String())
 		}
 	}
 
@@ -100,9 +100,10 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 	}
 
 	r := &request{
-		body:   tc.RequestBody,
-		url:    result,
-		method: tc.HTTPMethod,
+		contentType: "application/json",
+		body:        tc.RequestBody,
+		url:         result,
+		method:      tc.HTTPMethod,
 	}
 
 	err = r.processWithVariableMap(n.vm)
@@ -116,18 +117,19 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 	}
 
 	if tc.ResponseBody {
-		if len(resp.body) == 0 {
-			return errors.Wrapf(err, "test_case %d: wants response body but got no response body", tc.Position)
+		if resp.body.Len() == 0 {
+			return errors.Errorf("test_case %d: wants response body but got no response body: %+v", tc.Position, resp)
 		}
 
 		m := immune.M{}
 		err = resp.Decode(&m)
 		if err != nil {
-			return err
+			return errors.Errorf("test_case %d: failed to decode response body: %+v", tc.Position, resp)
 		}
+
 	} else {
-		if len(resp.body) > 0 {
-			return errors.Wrapf(err, "test_case %d: does not want a response body but got a response body: '%s'", tc.Position, string(resp.body))
+		if resp.body.Len() > 0 {
+			return errors.Wrapf(err, "test_case %d: does not want a response body but got a response body: '%s'", tc.Position, resp.body.String())
 		}
 	}
 
@@ -169,11 +171,11 @@ func (n *Net) sendRequest(ctx context.Context, r *request) (*response, error) {
 	}
 	defer resp.Body.Close()
 
-	var buf []byte
+	buf := []byte{}
 	buf, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return &response{body: buf, statusCode: resp.StatusCode}, nil
+	return &response{body: bytes.NewBuffer(buf), statusCode: resp.StatusCode}, nil
 }

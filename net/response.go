@@ -1,12 +1,15 @@
 package net
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
+)
 
 type response struct {
 	statusCode int
-	body       []byte
+	body       *bytes.Buffer
 }
 
 func (resp *response) Decode(out interface{}) error {
-	return json.Unmarshal(resp.body, out)
+	return json.Unmarshal(resp.body.Bytes(), out)
 }
