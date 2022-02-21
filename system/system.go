@@ -39,7 +39,7 @@ func NewSystem(filePath string) (*System, error) {
 	return sys, nil
 }
 
-const maxCallbackWait = 2
+const maxCallbackWait = 20
 
 func (s *System) Clean() error {
 	if s.BaseURL == "" {
