@@ -67,6 +67,7 @@ func addRunCommand() *cobra.Command {
 				return err
 			}
 
+			log.Infof("all tests passed")
 			return nil
 		},
 	}
