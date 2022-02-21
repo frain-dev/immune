@@ -1,32 +1,61 @@
 {
     "base_url": "http://127.0.0.1:5005/api/v1",
+    "callback": {
+        "port": 8804,
+        "route": "/"
+    },
     "setup_test_cases": [
         {
             "store_response_variables": {
-                "app_id": "uid",
-                "group_id": "group_id"
+                "group_id": "data.uid"
             },
             "http_method": "POST",
-            "endpoint": "/applications",
+            "endpoint": "/groups",
             "request_body": {
-                "app_name": "test_app",
-                "support_email": "test@app.com"
+                "config": {
+                    "disableEndpoint": true,
+                    "signature": {
+                        "hash": "SHA256",
+                        "header": "X-Retro-Signature"
+                    },
+                    "strategy": {
+                        "default": {
+                            "intervalSeconds": 30,
+                            "retryLimit": 4
+                        },
+                        "type": "default"
+                    }
+                },
+                "logo_url": "",
+                "name": "retro-group-7"
             },
             "response_body": true
         },
         {
             "store_response_variables": {
-                "endpoint_id": "uid"
+                "app_id": "data.uid"
+            },
+            "http_method": "POST",
+            "endpoint": "/applications?groupID={group_id}",
+            "request_body": {
+                "name": "retro-app-7",
+                "support_email": "retro_app@gmail.com"
+            },
+            "response_body": true
+        },
+        {
+            "store_response_variables": {
+                "endpoint_id": "data.uid"
             },
             "http_method": "POST",
             "endpoint": "/applications/{app_id}/endpoints",
             "request_body": {
-                "url": "https://12.44.442.ngrok.io",
+                "url": "https://b10e-102-219-153-88.eu.ngrok.io",
                 "secret": "12345",
                 "description": "Local ngrok endpoint",
                 "events": [
-                    "payment.failed",
-                    "payment.success"
+                    "*",
+                    "payment.failed"
                 ]
             },
             "response_body": true
@@ -37,13 +66,12 @@
             "http_method": "POST",
             "endpoint": "/event",
             "callback": {
-                "body": {
-                    "marvel": "stark"
-                }
+                "enabled": true,
+                "times": 2
             },
             "request_body": {
-                "app_id": "The knightly country give apple.",
-                "event_type": "The repelling metal watch hurriedly but open child totally hungrily.",
+                "app_id": "{app_id}",
+                "event_type": "payment.failed",
                 "data": {
                     "sc": "gene",
                     "marvel": "stark"
