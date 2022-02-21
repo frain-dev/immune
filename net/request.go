@@ -8,9 +8,10 @@ import (
 )
 
 type request struct {
-	body   immune.M
-	url    string
-	method immune.Method
+	contentType string
+	body        immune.M
+	url         string
+	method      immune.Method
 }
 
 func (r *request) processWithVariableMap(vm *immune.VariableMap) error {
@@ -27,10 +28,10 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 			}
 
 			if strings.HasPrefix(str, "{") && strings.HasSuffix(str, "}") {
-				varName := str[1 : len(str)-2]
+				varName := str[1 : len(str)-1]
 				value, exists := vm.Get(varName)
 				if !exists {
-					return errors.Errorf("variable %s does not exist in variable map")
+					return errors.Errorf("variable %s does not exist in variable map", varName)
 				}
 
 				m[k] = value // replace m[k] with the variable value

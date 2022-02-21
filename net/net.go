@@ -46,9 +46,10 @@ func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTes
 	}
 
 	r := &request{
-		url:    result,
-		body:   setupTC.RequestBody,
-		method: setupTC.HTTPMethod,
+		contentType: "application/json",
+		url:         result,
+		body:        setupTC.RequestBody,
+		method:      setupTC.HTTPMethod,
 	}
 
 	err = r.processWithVariableMap(n.vm)
@@ -69,13 +70,13 @@ func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTes
 		m := immune.M{}
 		err = resp.Decode(&m)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "setup_test_case %d: failed to decode response body", setupTC.Position)
 		}
 
 		if setupTC.StoreResponseVariables != nil {
 			err = n.vm.ProcessResponse(ctx, setupTC.StoreResponseVariables, m)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "setup_test_case %d: failed to process response body", setupTC.Position)
 			}
 		}
 	} else {
@@ -159,6 +160,8 @@ func (n *Net) sendRequest(ctx context.Context, r *request) (*response, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", r.contentType)
 
 	resp, err := n.client.Do(req)
 	if err != nil {
