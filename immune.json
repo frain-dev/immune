@@ -27,7 +27,7 @@
                     }
                 },
                 "logo_url": "",
-                "name": "retro-group-7"
+                "name": "retro-group-15"
             },
             "response_body": true
         },
@@ -38,7 +38,7 @@
             "http_method": "POST",
             "endpoint": "/applications?groupID={group_id}",
             "request_body": {
-                "name": "retro-app-7",
+                "name": "retro-app-15",
                 "support_email": "retro_app@gmail.com"
             },
             "response_body": true
@@ -64,7 +64,7 @@
     "test_cases": [
         {
             "http_method": "POST",
-            "endpoint": "/event",
+            "endpoint": "/events?groupID={group_id}",
             "callback": {
                 "enabled": true,
                 "times": 2
