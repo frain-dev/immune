@@ -1,8 +1,9 @@
 {
     "base_url": "http://127.0.0.1:5005/api/v1",
     "callback": {
-        "port": 8804,
-        "route": "/"
+        "port": 80,
+        "route": "/",
+        "id_location": "data"
     },
     "setup_test_cases": [
         {
@@ -27,7 +28,7 @@
                     }
                 },
                 "logo_url": "",
-                "name": "retro-group-16"
+                "name": "retro-group-18"
             },
             "response_body": true
         },
@@ -38,7 +39,7 @@
             "http_method": "POST",
             "endpoint": "/applications?groupID={group_id}",
             "request_body": {
-                "name": "retro-app-16",
+                "name": "retro-app-18",
                 "support_email": "retro_app@gmail.com"
             },
             "response_body": true
