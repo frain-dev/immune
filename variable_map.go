@@ -88,8 +88,7 @@ func InjectCallbackID(field string, value interface{}, resp M) error {
 	if len(parts) == 0 {
 		v, ok := resp[field]
 		if !ok { // the field doesn't exist, so create it
-			v = map[string]interface{}{}
-			resp[field] = v
+			return errors.Errorf("the field %s, does not exist", field)
 		}
 
 		m, ok := v.(map[string]interface{})
