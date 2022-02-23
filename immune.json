@@ -28,7 +28,7 @@
                     }
                 },
                 "logo_url": "",
-                "name": "retro-group-31"
+                "name": "retro-group-37"
             },
             "response_body": true
         },
@@ -39,7 +39,7 @@
             "http_method": "POST",
             "endpoint": "/applications?groupID={group_id}",
             "request_body": {
-                "name": "retro-app-31",
+                "name": "retro-app-37",
                 "support_email": "retro_app@gmail.com"
             },
             "response_body": true
@@ -71,6 +71,22 @@
                 "secret": "12345",
                 "description": "Local ngrok endpoint",
                 "events": [
+                    "payment.success"
+                ]
+            },
+            "response_body": true
+        },
+        {
+            "store_response_variables": {
+                "endpoint_id_3": "data.uid"
+            },
+            "http_method": "POST",
+            "endpoint": "/applications/{app_id}/endpoints",
+            "request_body": {
+                "url": "https://31d3-102-219-153-92.ngrok.io",
+                "secret": "12345",
+                "description": "Local ngrok endpoint",
+                "events": [
                     "*"
                 ]
             },
@@ -88,6 +104,23 @@
             "request_body": {
                 "app_id": "{app_id}",
                 "event_type": "payment.failed",
+                "data": {
+                    "sc": "gene",
+                    "marvel": "stark"
+                }
+            },
+            "response_body": true
+        },
+        {
+            "http_method": "POST",
+            "endpoint": "/events?groupID={group_id}",
+            "callback": {
+                "enabled": true,
+                "times": 2
+            },
+            "request_body": {
+                "app_id": "{app_id}",
+                "event_type": "payment.success",
                 "data": {
                     "sc": "gene",
                     "marvel": "stark"
