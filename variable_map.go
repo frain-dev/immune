@@ -110,15 +110,22 @@ func InjectCallbackID(field string, value interface{}, resp M) error {
 }
 
 func getM(m M, parts []string) (M, error) {
-	nextLevel := M{}
+	nextLevel := m
 	var ok bool
+	var v interface{}
 
 	track := ""
 	for _, part := range parts {
-		nextLevel, ok = m[part].(map[string]interface{})
+		v, ok = nextLevel[part]
 		if !ok {
-			return nil, errors.Errorf("the field %s, is not an object in response body", track[:len(track)-1]) // avoid printing the trailing dot
+			return nil, errors.Errorf("the field %s, does not exist", track+part) // avoid printing the trailing dot
 		}
+
+		nextLevel, ok = v.(map[string]interface{})
+		if !ok {
+			return nil, errors.Errorf("the field %s, is not an object in response body", track+part) // avoid printing the trailing dot
+		}
+
 		track += part + "."
 	}
 
