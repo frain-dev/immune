@@ -59,6 +59,7 @@ func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTes
 	if err != nil {
 		return errors.Wrapf(err, "setup_test_case %d: failed to process request body with variable map", setupTC.Position)
 	}
+	//log.Infof("setup_test_case %d: request body: %s", setupTC.Position, pretty.Sprint(r.body))
 
 	resp, err := n.sendRequest(ctx, r)
 	if err != nil {
