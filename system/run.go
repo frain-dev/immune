@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/frain-dev/immune/callback"
 	"github.com/frain-dev/immune/net"
 	"github.com/pkg/errors"
@@ -33,7 +35,9 @@ func (s *System) Run(ctx context.Context) error {
 		defer cs.Stop()
 	}
 
-	n := net.NewNet(cs, http.DefaultClient, s.Variables, s.MaxCallbackWaitSeconds, s.BaseURL, s.Callback.IDLocation)
+	n := net.NewNet(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation)
+
+	log.Info("starting execution of setup test cases")
 
 	for i := range s.SetupTestCases {
 		err = n.ExecuteSetupTestCase(ctx, &s.SetupTestCases[i])
@@ -42,12 +46,17 @@ func (s *System) Run(ctx context.Context) error {
 		}
 	}
 
+	log.Info("finished execution of setup test cases")
+	log.Info("starting execution of test cases")
+
 	for i := range s.TestCases {
 		err = n.ExecuteTestCase(ctx, &s.TestCases[i])
 		if err != nil {
 			return err
 		}
 	}
+
+	log.Info("finished execution of test cases")
 
 	return nil
 }
