@@ -2,6 +2,7 @@ package callback
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,7 +11,7 @@ import (
 )
 
 type Server struct {
-	outbound chan struct{}
+	outbound chan *Signal
 	stop     chan struct{}
 	s        *http.Server
 }
@@ -20,12 +21,22 @@ type Config struct {
 	Route string
 }
 
+type Signal struct {
+	ImmuneCallBackID string `json:"immune_callback_id"`
+}
+
 func NewServer(cfg Config) (*Server, error) {
-	outbound := make(chan struct{})
+	outbound := make(chan *Signal)
 
 	mux := http.DefaultServeMux
 	mux.HandleFunc(cfg.Route, func(w http.ResponseWriter, r *http.Request) {
-		outbound <- struct{}{}
+		sig := &Signal{}
+		err := json.NewDecoder(r.Body).Decode(sig)
+		if err != nil {
+			log.WithError(err).Error("failed to decode callback body")
+			return
+		}
+		outbound <- sig
 	})
 
 	srv := &http.Server{
@@ -72,8 +83,9 @@ func (s *Server) gracefulShutdown() {
 	if err != nil {
 		log.WithError(err).Fatal("failed to shutdown callback server")
 	}
+	log.Infof("callback server shutdown gracefully")
 }
 
-func (s *Server) ReceiveCallback() struct{} {
+func (s *Server) ReceiveCallback() *Signal {
 	return <-s.outbound
 }

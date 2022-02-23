@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/frain-dev/immune/system"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
