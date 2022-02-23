@@ -157,7 +157,7 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 			default:
 				sig := n.s.ReceiveCallback()
 				if sig.ImmuneCallBackID != uid {
-					return errors.Wrapf(err, "test_case %d: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Position, uid, sig.ImmuneCallBackID)
+					return errors.Errorf("test_case %d: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Position, uid, sig.ImmuneCallBackID)
 				}
 				log.Infof("callback %d for test_case %d received", i, tc.Position)
 			}
