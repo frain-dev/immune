@@ -13,8 +13,8 @@ import (
 
 func (s *System) Run(ctx context.Context) error {
 	cfg := callback.Config{
-		Port:  80,
-		Route: "/",
+		Port:  s.Callback.Port,
+		Route: s.Callback.Route,
 	}
 	var cs *callback.Server
 	var err error
@@ -22,7 +22,7 @@ func (s *System) Run(ctx context.Context) error {
 	if s.needsCallback {
 		cs, err = callback.NewServer(cfg)
 		if err != nil {
-			return errors.Wrap(err, "failed to initialize new callback se")
+			return errors.Wrap(err, "failed to initialize new callback server")
 		}
 
 		err = cs.Start(ctx)
@@ -33,7 +33,7 @@ func (s *System) Run(ctx context.Context) error {
 		defer cs.Stop()
 	}
 
-	n := net.NewNet(cs, http.DefaultClient, s.Variables, s.MaxCallbackWaitSeconds, s.BaseURL)
+	n := net.NewNet(cs, http.DefaultClient, s.Variables, s.MaxCallbackWaitSeconds, s.BaseURL, s.Callback.IDLocation)
 
 	for i := range s.SetupTestCases {
 		err = n.ExecuteSetupTestCase(ctx, &s.SetupTestCases[i])

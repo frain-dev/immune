@@ -8,18 +8,24 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/frain-dev/immune"
+	log "github.com/sirupsen/logrus"
 )
 
 type System struct {
-	BaseURL                string `json:"base_url"`
+	BaseURL                string                `json:"base_url"`
+	Callback               CallbackConfiguration `json:"callback"`
 	needsCallback          bool
 	MaxCallbackWaitSeconds uint                   `json:"max_callback_wait_seconds"`
 	Variables              *immune.VariableMap    `json:"-"`
 	SetupTestCases         []immune.SetupTestCase `json:"setup_test_cases"`
 	TestCases              []immune.TestCase      `json:"test_cases"`
+}
+
+type CallbackConfiguration struct {
+	Port       uint   `json:"port"`
+	Route      string `json:"route"`
+	IDLocation string `json:"id_location"`
 }
 
 func NewSystem(filePath string) (*System, error) {
