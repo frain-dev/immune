@@ -28,7 +28,7 @@
                     }
                 },
                 "logo_url": "",
-                "name": "retro-group-18"
+                "name": "retro-group-31"
             },
             "response_body": true
         },
@@ -39,7 +39,7 @@
             "http_method": "POST",
             "endpoint": "/applications?groupID={group_id}",
             "request_body": {
-                "name": "retro-app-18",
+                "name": "retro-app-31",
                 "support_email": "retro_app@gmail.com"
             },
             "response_body": true
@@ -51,7 +51,7 @@
             "http_method": "POST",
             "endpoint": "/applications/{app_id}/endpoints",
             "request_body": {
-                "url": "https://b10e-102-219-153-88.eu.ngrok.io",
+                "url": "https://31d3-102-219-153-92.ngrok.io",
                 "secret": "12345",
                 "description": "Local ngrok endpoint",
                 "events": [
@@ -67,7 +67,7 @@
             "http_method": "POST",
             "endpoint": "/applications/{app_id}/endpoints",
             "request_body": {
-                "url": "https://b10e-102-219-153-88.eu.ngrok.io",
+                "url": "https://31d3-102-219-153-92.ngrok.io",
                 "secret": "12345",
                 "description": "Local ngrok endpoint",
                 "events": [
