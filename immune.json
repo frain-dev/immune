@@ -2,6 +2,7 @@
     "base_url": "http://127.0.0.1:5005/api/v1",
     "callback": {
         "port": 80,
+        "max_wait_seconds": 20,
         "route": "/",
         "id_location": "data"
     },
@@ -28,7 +29,7 @@
                     }
                 },
                 "logo_url": "",
-                "name": "retro-group-37"
+                "name": "retro-group-38"
             },
             "response_body": true
         },
@@ -39,7 +40,7 @@
             "http_method": "POST",
             "endpoint": "/applications?groupID={group_id}",
             "request_body": {
-                "name": "retro-app-37",
+                "name": "retro-app-38",
                 "support_email": "retro_app@gmail.com"
             },
             "response_body": true
