@@ -11,5 +11,5 @@ type response struct {
 }
 
 func (resp *response) Decode(out interface{}) error {
-	return json.Unmarshal(resp.body.Bytes(), out)
+	return json.NewDecoder(resp.body).Decode(out)
 }
