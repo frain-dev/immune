@@ -36,7 +36,7 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 
 				m[k] = value // replace m[k] with the variable value
 			}
-		case map[string]interface{}: // TODO: may cause issues and have to change to  map[string]interface{}
+		case map[string]interface{}:
 			return r.traverse(v.(immune.M), vm)
 		}
 	}
