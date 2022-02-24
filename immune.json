@@ -29,7 +29,7 @@
                     }
                 },
                 "logo_url": "",
-                "name": "retro-group-38"
+                "name": "retro-group-49"
             },
             "response_body": true
         },
@@ -40,7 +40,7 @@
             "http_method": "POST",
             "endpoint": "/applications?groupID={group_id}",
             "request_body": {
-                "name": "retro-app-38",
+                "name": "retro-app-49",
                 "support_email": "retro_app@gmail.com"
             },
             "response_body": true
