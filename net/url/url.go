@@ -1,7 +1,6 @@
 package url
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/frain-dev/immune"
@@ -41,10 +40,6 @@ func Parse(s string) (*URL, error) {
 		i += seg.end // increment the index again
 
 		u.segments = append(u.segments, seg)
-	}
-
-	for i, seg := range u.segments {
-		fmt.Printf("segment %d: %v\n", i, *seg)
 	}
 
 	return u, nil
