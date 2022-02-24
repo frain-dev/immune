@@ -9,9 +9,9 @@ import (
 
 type request struct {
 	contentType string
-	body        immune.M
 	url         string
 	method      immune.Method
+	body        immune.M
 }
 
 func (r *request) processWithVariableMap(vm *immune.VariableMap) error {
@@ -36,7 +36,7 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 
 				m[k] = value // replace m[k] with the variable value
 			}
-		case immune.M: // TODO: may cause issues and have to change to  map[string]interface{}
+		case map[string]interface{}: // TODO: may cause issues and have to change to  map[string]interface{}
 			return r.traverse(v.(immune.M), vm)
 		}
 	}
