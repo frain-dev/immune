@@ -1,6 +1,7 @@
 package url
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/frain-dev/immune"
@@ -12,21 +13,38 @@ type URL struct {
 	url      string
 }
 
+// Parse parses an url string and records the segments containing variable references
+// The returned URL object contains a slice of these segments and the original url.
+//
+// It works by looking for the first occurrence of the '{' character and then a corresponding '}'
+// character, when the first segment is found the ending index is added to i, the same is done for
+// subsequent segments. By pushing i forward as we iterate,we can track how far along in the original
+// string we have come, when iterating for multiple segments.
 func Parse(s string) (*URL, error) {
 	if len(s) == 0 {
 		return nil, errors.New("url is empty")
 	}
 
 	u := &URL{segments: []*segment{}, url: s}
-
+	i := 0
 	for {
 		seg := nextSegment(s)
 		if seg == nil {
 			break
 		}
 
+		s = s[seg.end:] // cut s so the next call to nextSegment has a smaller string to run over
+
+		// add the last recorded index addition
+		seg.end = seg.end + i
+		seg.start = seg.start + i
+		i += seg.end // increment the index again
+
 		u.segments = append(u.segments, seg)
-		s = s[seg.end:]
+	}
+
+	for i, seg := range u.segments {
+		fmt.Printf("segment %d: %v\n", i, *seg)
 	}
 
 	return u, nil
@@ -61,26 +79,26 @@ type segment struct {
 }
 
 func nextSegment(s string) *segment {
-	open := strings.IndexRune(s, '{')
+	open := strings.IndexByte(s, '{')
 	if open < 0 {
 		return nil
 	}
 
-	close := open
+	closing := open
 	for i, c := range s[open:] {
 		if c == '}' {
-			close = open + i
+			closing = open + i
 			break
 		}
 	}
 
-	if close == open {
+	if closing == open {
 		panic("url: variable closing delimiter '}' is missing")
 	}
 
 	return &segment{
 		start: open,
-		end:   close,
-		name:  s[open+1 : close],
+		end:   closing,
+		name:  s[open+1 : closing],
 	}
 }
