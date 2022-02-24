@@ -8,18 +8,24 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/frain-dev/immune"
+	log "github.com/sirupsen/logrus"
 )
 
 type System struct {
-	BaseURL                string `json:"base_url"`
-	needsCallback          bool
-	MaxCallbackWaitSeconds uint                   `json:"max_callback_wait_seconds"`
-	Variables              *immune.VariableMap    `json:"-"`
-	SetupTestCases         []immune.SetupTestCase `json:"setup_test_cases"`
-	TestCases              []immune.TestCase      `json:"test_cases"`
+	BaseURL        string                 `json:"base_url"`
+	Callback       CallbackConfiguration  `json:"callback"`
+	Variables      *immune.VariableMap    `json:"-"`
+	SetupTestCases []immune.SetupTestCase `json:"setup_test_cases"`
+	TestCases      []immune.TestCase      `json:"test_cases"`
+	needsCallback  bool
+}
+
+type CallbackConfiguration struct {
+	MaxWaitSeconds uint   `json:"max_wait_seconds"`
+	Port           uint   `json:"port"`
+	Route          string `json:"route"`
+	IDLocation     string `json:"id_location"`
 }
 
 func NewSystem(filePath string) (*System, error) {
@@ -39,7 +45,7 @@ func NewSystem(filePath string) (*System, error) {
 	return sys, nil
 }
 
-const maxCallbackWait = 20
+const maxCallbackWait = 5
 
 func (s *System) Clean() error {
 	if s.BaseURL == "" {
@@ -51,9 +57,9 @@ func (s *System) Clean() error {
 		return fmt.Errorf("base url is not a vaild url: %v", err)
 	}
 
-	if s.MaxCallbackWaitSeconds == 0 {
+	if s.Callback.MaxWaitSeconds == 0 {
 		log.Warnf("max callback wait seconds is 0, using default value of %d seconds", maxCallbackWait)
-		s.MaxCallbackWaitSeconds = maxCallbackWait
+		s.Callback.MaxWaitSeconds = maxCallbackWait
 	}
 
 	varNameToSetupTC := map[string]int{}

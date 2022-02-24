@@ -12,11 +12,13 @@ import (
 	"github.com/frain-dev/immune"
 	"github.com/frain-dev/immune/callback"
 	"github.com/frain-dev/immune/net/url"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
 type Net struct {
+	callbackIDLocation     string
 	s                      *callback.Server
 	client                 *http.Client
 	vm                     *immune.VariableMap
@@ -24,8 +26,9 @@ type Net struct {
 	baseURL                string
 }
 
-func NewNet(s *callback.Server, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string) *Net {
+func NewNet(s *callback.Server, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Net {
 	return &Net{
+		callbackIDLocation:     callbackIDLocation,
 		s:                      s,
 		client:                 client,
 		vm:                     vm,
@@ -56,6 +59,7 @@ func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTes
 	if err != nil {
 		return errors.Wrapf(err, "setup_test_case %d: failed to process request body with variable map", setupTC.Position)
 	}
+	//log.Infof("setup_test_case %d: request body: %s", setupTC.Position, pretty.Sprint(r.body))
 
 	resp, err := n.sendRequest(ctx, r)
 	if err != nil {
@@ -97,6 +101,15 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 	result, err := u.ProcessWithVariableMap(n.vm)
 	if err != nil {
 		return errors.Wrapf(err, "test_case %d: failed to process parsed url with variable map", tc.Position)
+	}
+
+	var uid string
+	if tc.Callback.Enabled {
+		uid = uuid.New().String()
+		err = immune.InjectCallbackID(n.callbackIDLocation, uid, tc.RequestBody)
+		if err != nil {
+			return errors.Wrapf(err, "test_case %d: failed to inject callback id into request body", tc.Position)
+		}
 	}
 
 	r := &request{
@@ -143,7 +156,10 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 				log.Infof("succesfully received %d callbacks for test_case %d before max callback wait seconds elapsed", i, tc.Position)
 				break
 			default:
-				n.s.ReceiveCallback()
+				sig := n.s.ReceiveCallback()
+				if sig.ImmuneCallBackID != uid {
+					return errors.Errorf("test_case %d: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Position, uid, sig.ImmuneCallBackID)
+				}
 				log.Infof("callback %d for test_case %d received", i, tc.Position)
 			}
 		}

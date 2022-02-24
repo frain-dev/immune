@@ -1,8 +1,10 @@
 {
     "base_url": "http://127.0.0.1:5005/api/v1",
     "callback": {
-        "port": 8804,
-        "route": "/"
+        "port": 80,
+        "max_wait_seconds": 20,
+        "route": "/",
+        "id_location": "data"
     },
     "setup_test_cases": [
         {
@@ -27,7 +29,7 @@
                     }
                 },
                 "logo_url": "",
-                "name": "retro-group-16"
+                "name": "retro-group-38"
             },
             "response_body": true
         },
@@ -38,7 +40,7 @@
             "http_method": "POST",
             "endpoint": "/applications?groupID={group_id}",
             "request_body": {
-                "name": "retro-app-16",
+                "name": "retro-app-38",
                 "support_email": "retro_app@gmail.com"
             },
             "response_body": true
@@ -50,7 +52,7 @@
             "http_method": "POST",
             "endpoint": "/applications/{app_id}/endpoints",
             "request_body": {
-                "url": "https://b10e-102-219-153-88.eu.ngrok.io",
+                "url": "https://31d3-102-219-153-92.ngrok.io",
                 "secret": "12345",
                 "description": "Local ngrok endpoint",
                 "events": [
@@ -66,7 +68,23 @@
             "http_method": "POST",
             "endpoint": "/applications/{app_id}/endpoints",
             "request_body": {
-                "url": "https://b10e-102-219-153-88.eu.ngrok.io",
+                "url": "https://31d3-102-219-153-92.ngrok.io",
+                "secret": "12345",
+                "description": "Local ngrok endpoint",
+                "events": [
+                    "payment.success"
+                ]
+            },
+            "response_body": true
+        },
+        {
+            "store_response_variables": {
+                "endpoint_id_3": "data.uid"
+            },
+            "http_method": "POST",
+            "endpoint": "/applications/{app_id}/endpoints",
+            "request_body": {
+                "url": "https://31d3-102-219-153-92.ngrok.io",
                 "secret": "12345",
                 "description": "Local ngrok endpoint",
                 "events": [
@@ -87,6 +105,23 @@
             "request_body": {
                 "app_id": "{app_id}",
                 "event_type": "payment.failed",
+                "data": {
+                    "sc": "gene",
+                    "marvel": "stark"
+                }
+            },
+            "response_body": true
+        },
+        {
+            "http_method": "POST",
+            "endpoint": "/events?groupID={group_id}",
+            "callback": {
+                "enabled": true,
+                "times": 2
+            },
+            "request_body": {
+                "app_id": "{app_id}",
+                "event_type": "payment.success",
                 "data": {
                     "sc": "gene",
                     "marvel": "stark"
