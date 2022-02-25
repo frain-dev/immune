@@ -18,7 +18,7 @@ type URL struct {
 // It works by looking for the first occurrence of the '{' character and then a corresponding '}'
 // character, when the first segment is found the ending index is added to i, the same is done for
 // subsequent segments. By pushing i forward as we iterate,we can track how far along in the original
-// string we have come, when iterating for multiple segments.
+// string we have come.
 func Parse(s string) (*URL, error) {
 	if len(s) == 0 {
 		return nil, errors.New("url is empty")
@@ -45,6 +45,7 @@ func Parse(s string) (*URL, error) {
 	return u, nil
 }
 
+// ProcessWithVariableMap replaces the url variable segments with their corresponding values from the variable map
 func (u *URL) ProcessWithVariableMap(vm *immune.VariableMap) (string, error) {
 	if len(u.segments) == 0 {
 		return u.url, nil
@@ -73,6 +74,7 @@ type segment struct {
 	name  string
 }
 
+// nextSegment looks for the first variable segment in the given string
 func nextSegment(s string) *segment {
 	open := strings.IndexByte(s, '{')
 	if open < 0 {

@@ -25,6 +25,6 @@ type TestCase struct {
 }
 
 type Callback struct {
-	Enabled bool
-	Times   uint
+	Enabled bool `json:"enabled"`
+	Times   uint `json:"times"`
 }

@@ -17,14 +17,15 @@ import (
 // resulting *Signal is sent on it's outbound channel.
 // A callback should be received with it's ReceiveCallback method.
 type Server struct {
-	// all callback are sent on this channel
+	// all callbacks are sent on this channel
 	outbound chan *Signal
 
 	// this is a signal channel, it is never sent on, but once
 	// closed by Stop, it will trigger a graceful shutdown of the server
+	// see Start
 	stop chan struct{}
 
-	// the callback http.Server
+	// the callback http server
 	s *http.Server
 }
 
