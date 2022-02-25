@@ -17,13 +17,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Executor is used execute all tests
 type Executor struct {
 	callbackIDLocation     string
+	baseURL                string
+	maxCallbackWaitSeconds uint
 	s                      *callback.Server
 	client                 *http.Client
 	vm                     *immune.VariableMap
-	maxCallbackWaitSeconds uint
-	baseURL                string
 }
 
 func NewExecutor(s *callback.Server, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Executor {
@@ -37,13 +38,14 @@ func NewExecutor(s *callback.Server, client *http.Client, vm *immune.VariableMap
 	}
 }
 
-func (n *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTestCase) error {
-	u, err := url.Parse(fmt.Sprintf("%s%s", n.baseURL, setupTC.Endpoint))
+// ExecuteSetupTestCase executes setup test cases
+func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTestCase) error {
+	u, err := url.Parse(fmt.Sprintf("%s%s", ex.baseURL, setupTC.Endpoint))
 	if err != nil {
 		return errors.Wrapf(err, "setup_test_case %d: failed to parse url", setupTC.Position)
 	}
 
-	result, err := u.ProcessWithVariableMap(n.vm)
+	result, err := u.ProcessWithVariableMap(ex.vm)
 	if err != nil {
 		return errors.Wrapf(err, "setup_test_case %d: failed to process parsed url with variable map", setupTC.Position)
 	}
@@ -55,13 +57,13 @@ func (n *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Set
 		method:      setupTC.HTTPMethod,
 	}
 
-	err = r.processWithVariableMap(n.vm)
+	err = r.processWithVariableMap(ex.vm)
 	if err != nil {
 		return errors.Wrapf(err, "setup_test_case %d: failed to process request body with variable map", setupTC.Position)
 	}
 	//log.Infof("setup_test_case %d: request body: %s", setupTC.Position, pretty.Sprint(r.body))
 
-	resp, err := n.sendRequest(ctx, r)
+	resp, err := ex.sendRequest(ctx, r)
 	if err != nil {
 		return err
 	}
@@ -78,7 +80,7 @@ func (n *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Set
 		}
 
 		if setupTC.StoreResponseVariables != nil {
-			err = n.vm.ProcessResponse(ctx, setupTC.StoreResponseVariables, m)
+			err = ex.vm.ProcessResponse(ctx, setupTC.StoreResponseVariables, m)
 			if err != nil {
 				return errors.Wrapf(err, "setup_test_case %d: failed to process response body", setupTC.Position)
 			}
@@ -92,13 +94,14 @@ func (n *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Set
 	return nil
 }
 
-func (n *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
-	u, err := url.Parse(fmt.Sprintf("%s%s", n.baseURL, tc.Endpoint))
+// ExecuteTestCase executes test cases, it waits for callback if necessary
+func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
+	u, err := url.Parse(fmt.Sprintf("%s%s", ex.baseURL, tc.Endpoint))
 	if err != nil {
 		return errors.Wrapf(err, "test_case %d: failed to parse url", tc.Position)
 	}
 
-	result, err := u.ProcessWithVariableMap(n.vm)
+	result, err := u.ProcessWithVariableMap(ex.vm)
 	if err != nil {
 		return errors.Wrapf(err, "test_case %d: failed to process parsed url with variable map", tc.Position)
 	}
@@ -106,7 +109,7 @@ func (n *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) err
 	var uid string
 	if tc.Callback.Enabled {
 		uid = uuid.New().String()
-		err = immune.InjectCallbackID(n.callbackIDLocation, uid, tc.RequestBody)
+		err = immune.InjectCallbackID(ex.callbackIDLocation, uid, tc.RequestBody)
 		if err != nil {
 			return errors.Wrapf(err, "test_case %d: failed to inject callback id into request body", tc.Position)
 		}
@@ -119,12 +122,12 @@ func (n *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) err
 		method:      tc.HTTPMethod,
 	}
 
-	err = r.processWithVariableMap(n.vm)
+	err = r.processWithVariableMap(ex.vm)
 	if err != nil {
 		return errors.Wrapf(err, "test_case %d: failed to process request body with variable map", tc.Position)
 	}
 
-	resp, err := n.sendRequest(ctx, r)
+	resp, err := ex.sendRequest(ctx, r)
 	if err != nil {
 		return err
 	}
@@ -147,7 +150,7 @@ func (n *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) err
 	}
 
 	if tc.Callback.Enabled {
-		cctx, cancel := context.WithTimeout(context.Background(), time.Duration(n.maxCallbackWaitSeconds)*time.Second)
+		cctx, cancel := context.WithTimeout(context.Background(), time.Duration(ex.maxCallbackWaitSeconds)*time.Second)
 		defer cancel()
 
 		for i := uint(1); i <= tc.Callback.Times; i++ {
@@ -156,7 +159,7 @@ func (n *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) err
 				log.Infof("succesfully received %d callbacks for test_case %d before max callback wait seconds elapsed", i, tc.Position)
 				break
 			default:
-				sig := n.s.ReceiveCallback()
+				sig := ex.s.ReceiveCallback()
 				if sig.ImmuneCallBackID != uid {
 					return errors.Errorf("test_case %d: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Position, uid, sig.ImmuneCallBackID)
 				}
@@ -168,7 +171,7 @@ func (n *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) err
 	return nil
 }
 
-func (n *Executor) sendRequest(ctx context.Context, r *request) (*response, error) {
+func (ex *Executor) sendRequest(ctx context.Context, r *request) (*response, error) {
 	rb, err := json.Marshal(r.body)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal request body")
@@ -181,7 +184,7 @@ func (n *Executor) sendRequest(ctx context.Context, r *request) (*response, erro
 
 	req.Header.Add("Content-Type", r.contentType)
 
-	resp, err := n.client.Do(req)
+	resp, err := ex.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
