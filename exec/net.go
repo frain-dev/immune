@@ -11,7 +11,7 @@ import (
 
 	"github.com/frain-dev/immune"
 	"github.com/frain-dev/immune/callback"
-	"github.com/frain-dev/immune/exec/url"
+	"github.com/frain-dev/immune/url"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
