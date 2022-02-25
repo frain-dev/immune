@@ -1,4 +1,4 @@
-package net
+package exec
 
 import (
 	"bytes"
@@ -11,13 +11,13 @@ import (
 
 	"github.com/frain-dev/immune"
 	"github.com/frain-dev/immune/callback"
-	"github.com/frain-dev/immune/net/url"
+	"github.com/frain-dev/immune/exec/url"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
-type Net struct {
+type Executor struct {
 	callbackIDLocation     string
 	s                      *callback.Server
 	client                 *http.Client
@@ -26,18 +26,18 @@ type Net struct {
 	baseURL                string
 }
 
-func NewNet(s *callback.Server, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Net {
-	return &Net{
-		callbackIDLocation:     callbackIDLocation,
+func NewExecutor(s *callback.Server, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Executor {
+	return &Executor{
 		s:                      s,
-		client:                 client,
 		vm:                     vm,
-		maxCallbackWaitSeconds: maxCallbackWaitSeconds,
+		client:                 client,
 		baseURL:                baseURL,
+		callbackIDLocation:     callbackIDLocation,
+		maxCallbackWaitSeconds: maxCallbackWaitSeconds,
 	}
 }
 
-func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTestCase) error {
+func (n *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTestCase) error {
 	u, err := url.Parse(fmt.Sprintf("%s%s", n.baseURL, setupTC.Endpoint))
 	if err != nil {
 		return errors.Wrapf(err, "setup_test_case %d: failed to parse url", setupTC.Position)
@@ -92,7 +92,7 @@ func (n *Net) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTes
 	return nil
 }
 
-func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
+func (n *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 	u, err := url.Parse(fmt.Sprintf("%s%s", n.baseURL, tc.Endpoint))
 	if err != nil {
 		return errors.Wrapf(err, "test_case %d: failed to parse url", tc.Position)
@@ -168,7 +168,7 @@ func (n *Net) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 	return nil
 }
 
-func (n *Net) sendRequest(ctx context.Context, r *request) (*response, error) {
+func (n *Executor) sendRequest(ctx context.Context, r *request) (*response, error) {
 	rb, err := json.Marshal(r.body)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal request body")
@@ -187,7 +187,7 @@ func (n *Net) sendRequest(ctx context.Context, r *request) (*response, error) {
 	}
 	defer resp.Body.Close()
 
-	buf := []byte{}
+	buf := make([]byte, 0)
 	buf, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
