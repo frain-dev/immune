@@ -12,6 +12,9 @@ type VariableMap struct {
 	VariableToValue M
 }
 
+// GetString gets the value of key from the variable map, if the value
+// isn't of the string type, it will be converted to string via fmt.Sprintf
+// and returned
 func (v VariableMap) GetString(key string) (string, bool) {
 	value, ok := v.VariableToValue[key]
 	if !ok {
@@ -26,15 +29,18 @@ func (v VariableMap) GetString(key string) (string, bool) {
 	return fmt.Sprintf("%s", value), true
 }
 
+// Get gets the value of key from the variable map
 func (v VariableMap) Get(key string) (interface{}, bool) {
 	value, ok := v.VariableToValue[key]
 	return value, ok
 }
 
-func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, resp M) error {
+// ProcessResponse takes the variables declared in variableToField from values, and stores them in the
+// variable map.
+func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, values M) error {
 	for varName, field := range variableToField {
 
-		value, err := getKeyInMap(field, resp)
+		value, err := getKeyInMap(field, values)
 		if err != nil {
 			return err
 		}
@@ -80,34 +86,8 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 	return value, nil
 }
 
-const CallbackIDFieldName = "immune_callback_id"
-
-func InjectCallbackID(field string, value interface{}, resp M) error {
-	// we may have separators referencing deeper fields in the response body e.g data.uid
-	parts := strings.Split(field, ".")
-	if len(parts) == 0 {
-		v, ok := resp[field]
-		if !ok { // the field doesn't exist, so create it
-			return errors.Errorf("the field %s, does not exist", field)
-		}
-
-		m, ok := v.(map[string]interface{})
-		if !ok {
-			return errors.Errorf("the field %s, is not an object in the request body", field)
-		}
-		m[CallbackIDFieldName] = value // we have reached the last part of the "data.uid"
-	}
-
-	nextLevel, err := getM(resp, parts)
-	if err != nil {
-		return err
-	}
-
-	nextLevel[CallbackIDFieldName] = value // we have reached the last part of the "data.uid"
-
-	return nil
-}
-
+// getM fetches the item in parts, going one level deeper with each iteration of parts
+// the result of each iteration is expected to be of type map[string]interface{}
 func getM(m M, parts []string) (M, error) {
 	nextLevel := m
 	var ok bool
@@ -122,7 +102,7 @@ func getM(m M, parts []string) (M, error) {
 
 		nextLevel, ok = v.(map[string]interface{})
 		if !ok {
-			return nil, errors.Errorf("the field %s, is not an object in response body", track+part) // avoid printing the trailing dot
+			return nil, errors.Errorf("the field %s, is not an object in response body", track+part)
 		}
 
 		track += part + "."

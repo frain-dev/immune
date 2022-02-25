@@ -7,37 +7,41 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/frain-dev/immune"
+
 	log "github.com/sirupsen/logrus"
 )
 
+// Server is a callback server. It will listen for requests on its
+// specified port and parse incoming requests into a *Signal. The
+// resulting *Signal is sent on it's outbound channel.
+// A callback should be received with it's ReceiveCallback method.
 type Server struct {
+	// all callbacks are sent on this channel
 	outbound chan *Signal
-	stop     chan struct{}
-	s        *http.Server
+
+	// this is a signal channel, it is never sent on, but once
+	// closed by Stop, it will trigger a graceful shutdown of the server
+	// see Start
+	stop chan struct{}
+
+	// the callback http server
+	s *http.Server
 }
 
-type Config struct {
-	Port  uint
-	Route string
-}
-
+// A Signal represents a single callback
 type Signal struct {
+	// ImmuneCallBackID collects the callback id from the request body, it's json tag
+	// must always match immune.CallbackIDFieldName
 	ImmuneCallBackID string `json:"immune_callback_id"`
 }
 
-func NewServer(cfg Config) (*Server, error) {
+// NewServer instantiates a new callback Server
+func NewServer(cfg *immune.CallbackConfiguration) (*Server, error) {
 	outbound := make(chan *Signal)
 
 	mux := http.DefaultServeMux
-	mux.HandleFunc(cfg.Route, func(w http.ResponseWriter, r *http.Request) {
-		sig := &Signal{}
-		err := json.NewDecoder(r.Body).Decode(sig)
-		if err != nil {
-			log.WithError(err).Error("failed to decode callback body")
-			return
-		}
-		outbound <- sig
-	})
+	mux.HandleFunc(cfg.Route, handleCallback(outbound))
 
 	srv := &http.Server{
 		Addr:    ":" + strconv.FormatUint(uint64(cfg.Port), 10),
@@ -51,6 +55,7 @@ func NewServer(cfg Config) (*Server, error) {
 	}, nil
 }
 
+// Start starts the callback http server
 func (s *Server) Start(ctx context.Context) error {
 	go func() {
 		err := s.s.ListenAndServe()
@@ -59,6 +64,7 @@ func (s *Server) Start(ctx context.Context) error {
 		}
 	}()
 
+	// watches for context cancellation & the stop channel being closed
 	go func() {
 		select {
 		case <-ctx.Done():
@@ -71,6 +77,22 @@ func (s *Server) Start(ctx context.Context) error {
 	return nil
 }
 
+// handleCallback returns a http.HandlerFunc that handles a request
+// to the callback server
+func handleCallback(outbound chan *Signal) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sig := &Signal{}
+		err := json.NewDecoder(r.Body).Decode(sig)
+		if err != nil {
+			log.WithError(err).Error("failed to decode callback body")
+			return
+		}
+		outbound <- sig
+	}
+}
+
+// Stop closes the stop channel, which signals a graceful shutdown of the server
+// see Start.
 func (s *Server) Stop() {
 	close(s.stop)
 }
@@ -86,6 +108,7 @@ func (s *Server) gracefulShutdown() {
 	log.Infof("callback server shutdown gracefully")
 }
 
+// ReceiveCallback receives a Signal from the callback channel
 func (s *Server) ReceiveCallback() *Signal {
 	return <-s.outbound
 }

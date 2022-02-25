@@ -1,4 +1,4 @@
-package net
+package exec
 
 import (
 	"strings"
@@ -9,21 +9,25 @@ import (
 
 type request struct {
 	contentType string
-	body        immune.M
 	url         string
 	method      immune.Method
+	body        immune.M
 }
 
+// processWithVariableMap replaces all variable references in the request body with
+// their corresponding values from the variable map
 func (r *request) processWithVariableMap(vm *immune.VariableMap) error {
 	return r.traverse(r.body, vm)
 }
 
+// traverse examines all key-value pairs in m replacing all values that reference
+// variables with their corresponding values from the variable map
 func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 	for k, v := range m {
 		switch v.(type) {
-		case string:
+		case string: // only string values in the map can reference variables in the format "{variable_name}"
 			str := v.(string)
-			if len(str) < 3 { // it must be in the format {x}
+			if len(str) < 3 { // at least three characters must be present in the format {x}
 				continue
 			}
 
@@ -36,8 +40,12 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 
 				m[k] = value // replace m[k] with the variable value
 			}
-		case immune.M: // TODO: may cause issues and have to change to  map[string]interface{}
-			return r.traverse(v.(immune.M), vm)
+		case map[string]interface{}:
+			// recursively traverse values with the type map[string]interface{}
+			err := r.traverse(v.(map[string]interface{}), vm)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

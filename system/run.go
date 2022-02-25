@@ -7,22 +7,18 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/frain-dev/immune/callback"
-	"github.com/frain-dev/immune/net"
+	"github.com/frain-dev/immune/exec"
 	"github.com/pkg/errors"
 )
 
-// TODO: more work on the context timeout and cancellations
-
+// Run executes entire system, starting with the setup test cases,
+// and then the test cases, a callback server will be started if needed.
 func (s *System) Run(ctx context.Context) error {
-	cfg := callback.Config{
-		Port:  s.Callback.Port,
-		Route: s.Callback.Route,
-	}
 	var cs *callback.Server
 	var err error
 
 	if s.needsCallback {
-		cs, err = callback.NewServer(cfg)
+		cs, err = callback.NewServer(&s.Callback)
 		if err != nil {
 			return errors.Wrap(err, "failed to initialize new callback server")
 		}
@@ -35,12 +31,12 @@ func (s *System) Run(ctx context.Context) error {
 		defer cs.Stop()
 	}
 
-	n := net.NewNet(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation)
+	ex := exec.NewExecutor(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation)
 
 	log.Info("starting execution of setup test cases")
 
 	for i := range s.SetupTestCases {
-		err = n.ExecuteSetupTestCase(ctx, &s.SetupTestCases[i])
+		err = ex.ExecuteSetupTestCase(ctx, &s.SetupTestCases[i])
 		if err != nil {
 			return err
 		}
@@ -50,7 +46,7 @@ func (s *System) Run(ctx context.Context) error {
 	log.Info("starting execution of test cases")
 
 	for i := range s.TestCases {
-		err = n.ExecuteTestCase(ctx, &s.TestCases[i])
+		err = ex.ExecuteTestCase(ctx, &s.TestCases[i])
 		if err != nil {
 			return err
 		}

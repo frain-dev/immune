@@ -43,32 +43,39 @@ func main() {
 func addRunCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "run",
-		Aliases: []string{"serve", "s"},
-		Short:   "Start the HTTP server",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cfgPath, err := cmd.Flags().GetString("config")
+		Aliases: []string{"r"},
+		Short:   "Run the Immune tests",
+		Run: func(cmd *cobra.Command, args []string) {
+			err := run(cmd)
 			if err != nil {
-				return err
+				log.Fatal(err)
 			}
-
-			sys, err := system.NewSystem(cfgPath)
-			if err != nil {
-				return err
-			}
-
-			err = sys.Clean()
-			if err != nil {
-				return err
-			}
-
-			err = sys.Run(context.Background())
-			if err != nil {
-				return err
-			}
-
-			log.Infof("all tests passed")
-			return nil
 		},
 	}
 	return cmd
+}
+
+func run(cmd *cobra.Command) error {
+	cfgPath, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return err
+	}
+
+	sys, err := system.NewSystem(cfgPath)
+	if err != nil {
+		return err
+	}
+
+	err = sys.Clean()
+	if err != nil {
+		return err
+	}
+
+	err = sys.Run(context.Background())
+	if err != nil {
+		return err
+	}
+
+	log.Infof("all tests passed")
+	return nil
 }

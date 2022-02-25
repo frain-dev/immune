@@ -12,20 +12,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// System represents the entire suite to be run against an API
 type System struct {
-	BaseURL        string                 `json:"base_url"`
-	Callback       CallbackConfiguration  `json:"callback"`
-	Variables      *immune.VariableMap    `json:"-"`
-	SetupTestCases []immune.SetupTestCase `json:"setup_test_cases"`
-	TestCases      []immune.TestCase      `json:"test_cases"`
+	BaseURL        string                       `json:"base_url"`
+	Callback       immune.CallbackConfiguration `json:"callback"`
+	Variables      *immune.VariableMap          `json:"-"`
+	SetupTestCases []immune.SetupTestCase       `json:"setup_test_cases"`
+	TestCases      []immune.TestCase            `json:"test_cases"`
 	needsCallback  bool
-}
-
-type CallbackConfiguration struct {
-	MaxWaitSeconds uint   `json:"max_wait_seconds"`
-	Port           uint   `json:"port"`
-	Route          string `json:"route"`
-	IDLocation     string `json:"id_location"`
 }
 
 func NewSystem(filePath string) (*System, error) {
@@ -47,6 +41,7 @@ func NewSystem(filePath string) (*System, error) {
 
 const maxCallbackWait = 5
 
+// Clean validates the System's data
 func (s *System) Clean() error {
 	if s.BaseURL == "" {
 		return errors.New("base url cannot be empty")
