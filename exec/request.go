@@ -42,7 +42,10 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 			}
 		case map[string]interface{}:
 			// recursively traverse values with the type map[string]interface{}
-			return r.traverse(v.(map[string]interface{}), vm)
+			err := r.traverse(v.(map[string]interface{}), vm)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
