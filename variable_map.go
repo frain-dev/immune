@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 type VariableMap struct {
@@ -26,7 +24,7 @@ func (v VariableMap) GetString(key string) (string, bool) {
 		return str, true
 	}
 
-	return fmt.Sprintf("%s", value), true
+	return fmt.Sprintf("%v", value), true
 }
 
 // Get gets the value of key from the variable map
@@ -50,7 +48,7 @@ func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, val
 		case string, int, int8, int32, int16, int64:
 			break
 		default:
-			return errors.Errorf("variable %s is of type %T in the response body, only string & integer is currently supported", varName, value)
+			return fmt.Errorf("variable %s is of type %T in the response body, only string & integer is currently supported", varName, value)
 		}
 
 		v.VariableToValue[varName] = value
@@ -69,7 +67,7 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 	if len(parts) == 0 {
 		value, ok = resp[field]
 		if !ok {
-			return nil, errors.Errorf("field %s not found in response", field)
+			return nil, fmt.Errorf("field %s not found in response", field)
 		}
 	} else {
 		lastPart := parts[len(parts)-1]
@@ -80,7 +78,10 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 			return nil, err
 		}
 
-		value = nextLevel[lastPart] // we have reached the last part of the "data.uid"
+		value, ok = nextLevel[lastPart] // we have reached the last part of the "data.uid"
+		if !ok {
+			return nil, fmt.Errorf("field %s not found in response", field)
+		}
 	}
 
 	return value, nil
@@ -97,12 +98,12 @@ func getM(m M, parts []string) (M, error) {
 	for _, part := range parts {
 		v, ok = nextLevel[part]
 		if !ok {
-			return nil, errors.Errorf("the field %s, does not exist", track+part) // avoid printing the trailing dot
+			return nil, fmt.Errorf("the field %s, does not exist", track+part) // avoid printing the trailing dot
 		}
 
 		nextLevel, ok = v.(map[string]interface{})
 		if !ok {
-			return nil, errors.Errorf("the field %s, is not an object in response body", track+part)
+			return nil, fmt.Errorf("the field %s, is not an object in the given map", track+part)
 		}
 
 		track += part + "."
