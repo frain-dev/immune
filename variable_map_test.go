@@ -144,7 +144,7 @@ func TestVariableMap_GetString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v := VariableMap{
+			v := &VariableMap{
 				VariableToValue: tt.fields.VariableToValue,
 			}
 			got, exists := v.GetString(tt.args.key)
@@ -197,7 +197,7 @@ func TestVariableMap_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v := VariableMap{
+			v := &VariableMap{
 				VariableToValue: tt.fields.VariableToValue,
 			}
 			got, exists := v.Get(tt.args.key)

@@ -13,7 +13,7 @@ type VariableMap struct {
 // GetString gets the value of key from the variable map, if the value
 // isn't of the string type, it will be converted to string via fmt.Sprintf
 // and returned
-func (v VariableMap) GetString(key string) (string, bool) {
+func (v *VariableMap) GetString(key string) (string, bool) {
 	value, ok := v.VariableToValue[key]
 	if !ok {
 		return "", false
@@ -28,14 +28,14 @@ func (v VariableMap) GetString(key string) (string, bool) {
 }
 
 // Get gets the value of key from the variable map
-func (v VariableMap) Get(key string) (interface{}, bool) {
+func (v *VariableMap) Get(key string) (interface{}, bool) {
 	value, ok := v.VariableToValue[key]
 	return value, ok
 }
 
 // ProcessResponse takes the variables declared in variableToField from values, and stores them in the
 // variable map.
-func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, values M) error {
+func (v *VariableMap) ProcessResponse(ctx context.Context, variableToField S, values M) error {
 	for varName, field := range variableToField {
 
 		value, err := getKeyInMap(field, values)
