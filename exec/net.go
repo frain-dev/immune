@@ -70,7 +70,7 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 
 	if setupTC.ResponseBody {
 		if resp.body.Len() == 0 {
-			return errors.Wrapf(err, "setup_test_case %d: wants response body but got no response body", setupTC.Position)
+			return errors.Errorf("setup_test_case %d: wants response body but got no response body", setupTC.Position)
 		}
 
 		m := immune.M{}
@@ -87,7 +87,7 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 		}
 	} else {
 		if resp.body.Len() > 0 {
-			return errors.Wrapf(err, "setup_test_case %d: does not want a response body but got a response body: '%s'", setupTC.Position, resp.body.String())
+			return errors.Errorf("setup_test_case %d: does not want a response body but got a response body: '%s'", setupTC.Position, resp.body.String())
 		}
 	}
 
