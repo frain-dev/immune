@@ -8,9 +8,6 @@ import (
 )
 
 func TestVariableMap_ProcessResponse(t *testing.T) {
-	type fields struct {
-		VariableToValue M
-	}
 	type args struct {
 		ctx             context.Context
 		variableToField S
@@ -206,6 +203,187 @@ func TestVariableMap_Get(t *testing.T) {
 			got, exists := v.Get(tt.args.key)
 			require.Equal(t, tt.want, got)
 			require.Equal(t, tt.wantExists, exists)
+		})
+	}
+}
+
+func Test_getM(t *testing.T) {
+	type args struct {
+		m     M
+		parts []string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		want       M
+		wantErrMsg string
+		wantErr    bool
+	}{
+		{
+			name: "should_get_ref_map",
+			args: args{
+				m: M{
+					"data": map[string]interface{}{
+						"ref": map[string]interface{}{
+							"status": 1234,
+							"marvel": "DC",
+						},
+					},
+				},
+				parts: []string{"data", "ref"},
+			},
+			want: map[string]interface{}{
+				"status": 1234,
+				"marvel": "DC",
+			},
+			wantErr: false,
+		},
+		{
+			name: "should_get_data_map",
+			args: args{
+				m: M{
+					"data": map[string]interface{}{
+						"chef": map[string]interface{}{
+							"status": 1234,
+						},
+					},
+				},
+				parts: []string{"data"},
+			},
+			want: map[string]interface{}{
+				"chef": map[string]interface{}{
+					"status": 1234,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "should_error_for_field_not_exists",
+			args: args{
+				m: M{
+					"data": map[string]interface{}{
+						"ref": map[string]interface{}{},
+					},
+				},
+				parts: []string{"data", "ref", "status"},
+			},
+			want:       nil,
+			wantErrMsg: "the field data.ref.status, does not exist",
+			wantErr:    true,
+		},
+		{
+			name: "should_error_for_non_object_type",
+			args: args{
+				m: M{
+					"data": map[string]interface{}{
+						"ref": map[string]interface{}{
+							"status": 1234,
+						},
+					},
+				},
+				parts: []string{"data", "ref", "status"},
+			},
+			want:       nil,
+			wantErrMsg: "the field data.ref.status, is not an object in the given map",
+			wantErr:    true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getM(tt.args.m, tt.args.parts)
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Equal(t, err.Error(), tt.wantErrMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, got, tt.want)
+		})
+	}
+}
+
+func Test_getKeyInMap(t *testing.T) {
+	type args struct {
+		field string
+		resp  M
+	}
+	tests := []struct {
+		name       string
+		args       args
+		want       interface{}
+		wantErrMsg string
+		wantErr    bool
+	}{
+		{
+			name: "should_get_key_value_1",
+			args: args{
+				field: "data.uid",
+				resp: M{
+					"status":  false,
+					"message": "fetched app",
+					"data": map[string]interface{}{
+						"uid": "1234243",
+					},
+				},
+			},
+			want:    "1234243",
+			wantErr: false,
+		},
+		{
+			name: "should_get_key_value_2",
+			args: args{
+				field: "data.ref.marvel",
+				resp: M{
+					"status":  false,
+					"message": "fetched app",
+					"data": map[string]interface{}{
+						"ref": map[string]interface{}{
+							"marvel": []string{"stark", "steve"},
+						},
+					},
+				},
+			},
+			want:    []string{"stark", "steve"},
+			wantErr: false,
+		},
+		{
+			name: "should_error_for_field_not_exists",
+			args: args{
+				field: "data",
+				resp: M{
+					"status":  false,
+					"message": "fetched app",
+				},
+			},
+			wantErrMsg: "field data does not exist",
+			wantErr:    true,
+		},
+		{
+			name: "should_error_for_field_not_exists",
+			args: args{
+				field: "data.uid",
+				resp: M{
+					"status":  false,
+					"message": "fetched app",
+					"data":    map[string]interface{}{},
+				},
+			},
+			wantErrMsg: "field data.uid does not exist",
+			wantErr:    true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getKeyInMap(tt.args.field, tt.args.resp)
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Equal(t, err.Error(), tt.wantErrMsg)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, got, tt.want)
 		})
 	}
 }

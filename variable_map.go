@@ -63,11 +63,10 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 
 	// we may have separators referencing deeper fields in the response body e.g data.uid
 	parts := strings.Split(field, ".")
-
-	if len(parts) == 0 {
+	if len(parts) < 2 { // if it's less than 2, then there is no '.' in field
 		value, ok = resp[field]
 		if !ok {
-			return nil, fmt.Errorf("field %s not found in response", field)
+			return nil, fmt.Errorf("field %s does not exist", field)
 		}
 	} else {
 		lastPart := parts[len(parts)-1]
@@ -80,7 +79,7 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 
 		value, ok = nextLevel[lastPart] // we have reached the last part of the "data.uid"
 		if !ok {
-			return nil, fmt.Errorf("field %s not found in response", field)
+			return nil, fmt.Errorf("field %s does not exist", field)
 		}
 	}
 
