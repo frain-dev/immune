@@ -90,7 +90,7 @@ func nextVariable(s string) *variableSegment {
 		panic("url: variable closing delimiter '}' is missing")
 	}
 
-	if s[open:closing] == "" {
+	if s[open:closing+1] == "{}" {
 		return &variableSegment{
 			name:    "",
 			closing: closing,
