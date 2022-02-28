@@ -4,17 +4,18 @@ import (
 	"context"
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/frain-dev/immune"
 
 	"github.com/frain-dev/immune/callback"
 	"github.com/frain-dev/immune/exec"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
-// Run executes entire system, starting with the setup test cases,
+// Run executes the entire system, starting with the setup test cases,
 // and then the test cases, a callback server will be started if needed.
 func (s *System) Run(ctx context.Context) error {
-	var cs *callback.Server
+	var cs immune.CallbackServer
 	var err error
 
 	if s.needsCallback {

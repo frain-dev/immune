@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/frain-dev/immune"
-	"github.com/frain-dev/immune/callback"
 )
 
 func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
@@ -282,7 +281,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 		callbackIDLocation     string
 		baseURL                string
 		maxCallbackWaitSeconds uint
-		s                      *callback.Server
+		s                      immune.CallbackServer
 		client                 *http.Client
 		vm                     *immune.VariableMap
 	}
@@ -291,12 +290,13 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 		tc  *immune.TestCase
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name      string
+		fields    fields
+		args      args
+		arrangeFn func() func()
+		wantErr   bool
 	}{
-		// TODO: Add test cases.
+		{},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -320,7 +320,7 @@ func TestExecutor_sendRequest(t *testing.T) {
 		callbackIDLocation     string
 		baseURL                string
 		maxCallbackWaitSeconds uint
-		s                      *callback.Server
+		s                      immune.CallbackServer
 		client                 *http.Client
 		vm                     *immune.VariableMap
 	}
@@ -332,13 +332,15 @@ func TestExecutor_sendRequest(t *testing.T) {
 		r   *request
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		nFn     func() func()
-		want    *response
-		wantErr bool
-	}{}
+		name      string
+		fields    fields
+		args      args
+		arrangeFn func() func()
+		want      *response
+		wantErr   bool
+	}{
+		{},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 

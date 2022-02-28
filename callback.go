@@ -1,6 +1,7 @@
 package immune
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -40,4 +41,10 @@ func InjectCallbackID(field string, value interface{}, r M) error {
 	nextLevel[CallbackIDFieldName] = value
 
 	return nil
+}
+
+type CallbackServer interface {
+	ReceiveCallback() *Signal
+	Start(ctx context.Context) error
+	Stop()
 }

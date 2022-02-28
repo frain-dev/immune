@@ -12,13 +12,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Server is a callback server. It will listen for requests on its
+// server is a callback server. It will listen for requests on its
 // specified port and parse incoming requests into a *Signal. The
 // resulting *Signal is sent on it's outbound channel.
 // A callback should be received with it's ReceiveCallback method.
-type Server struct {
+type server struct {
 	// all callbacks are sent on this channel
-	outbound chan *Signal
+	outbound chan *immune.Signal
 
 	// this is a signal channel, it is never sent on, but once
 	// closed by Stop, it will trigger a graceful shutdown of the server
@@ -29,16 +29,9 @@ type Server struct {
 	s *http.Server
 }
 
-// A Signal represents a single callback
-type Signal struct {
-	// ImmuneCallBackID collects the callback id from the request body, it's json tag
-	// must always match immune.CallbackIDFieldName
-	ImmuneCallBackID string `json:"immune_callback_id"`
-}
-
-// NewServer instantiates a new callback Server
-func NewServer(cfg *immune.CallbackConfiguration) (*Server, error) {
-	outbound := make(chan *Signal)
+// NewServer instantiates a new callback server
+func NewServer(cfg *immune.CallbackConfiguration) (immune.CallbackServer, error) {
+	outbound := make(chan *immune.Signal)
 
 	mux := http.DefaultServeMux
 	mux.HandleFunc(cfg.Route, handleCallback(outbound))
@@ -48,7 +41,7 @@ func NewServer(cfg *immune.CallbackConfiguration) (*Server, error) {
 		Handler: mux,
 	}
 
-	return &Server{
+	return &server{
 		stop:     make(chan struct{}),
 		outbound: outbound,
 		s:        srv,
@@ -56,7 +49,7 @@ func NewServer(cfg *immune.CallbackConfiguration) (*Server, error) {
 }
 
 // Start starts the callback http server
-func (s *Server) Start(ctx context.Context) error {
+func (s *server) Start(ctx context.Context) error {
 	go func() {
 		err := s.s.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
@@ -79,9 +72,9 @@ func (s *Server) Start(ctx context.Context) error {
 
 // handleCallback returns a http.HandlerFunc that handles a request
 // to the callback server
-func handleCallback(outbound chan *Signal) http.HandlerFunc {
+func handleCallback(outbound chan<- *immune.Signal) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sig := &Signal{}
+		sig := &immune.Signal{}
 		err := json.NewDecoder(r.Body).Decode(sig)
 		if err != nil {
 			log.WithError(err).Error("failed to decode callback body")
@@ -93,11 +86,11 @@ func handleCallback(outbound chan *Signal) http.HandlerFunc {
 
 // Stop closes the stop channel, which signals a graceful shutdown of the server
 // see Start.
-func (s *Server) Stop() {
+func (s *server) Stop() {
 	close(s.stop)
 }
 
-func (s *Server) gracefulShutdown() {
+func (s *server) gracefulShutdown() {
 	cctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -109,6 +102,6 @@ func (s *Server) gracefulShutdown() {
 }
 
 // ReceiveCallback receives a Signal from the callback channel
-func (s *Server) ReceiveCallback() *Signal {
+func (s *server) ReceiveCallback() *immune.Signal {
 	return <-s.outbound
 }

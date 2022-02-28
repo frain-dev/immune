@@ -10,24 +10,23 @@ import (
 	"time"
 
 	"github.com/frain-dev/immune"
-	"github.com/frain-dev/immune/callback"
 	"github.com/frain-dev/immune/url"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
-// Executor is used execute all tests
+// Executor is used to execute tests
 type Executor struct {
 	callbackIDLocation     string
 	baseURL                string
 	maxCallbackWaitSeconds uint
-	s                      *callback.Server
+	s                      immune.CallbackServer
 	client                 *http.Client
 	vm                     *immune.VariableMap
 }
 
-func NewExecutor(s *callback.Server, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Executor {
+func NewExecutor(s immune.CallbackServer, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Executor {
 	return &Executor{
 		s:                      s,
 		vm:                     vm,
