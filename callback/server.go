@@ -80,6 +80,7 @@ func handleCallback(outbound chan<- *immune.Signal) http.HandlerFunc {
 			log.WithError(err).Error("failed to decode callback body")
 			return
 		}
+		w.WriteHeader(http.StatusOK)
 		outbound <- sig
 	}
 }
