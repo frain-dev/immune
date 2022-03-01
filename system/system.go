@@ -63,6 +63,10 @@ func (s *System) Clean() error {
 		tc := &s.SetupTestCases[i]
 		tcNum := i + 1
 
+		if tc.StatusCode < 100 || tc.StatusCode > 511 {
+			return fmt.Errorf("setup_test_case %d: valid range for status_code is 100-511", tcNum)
+		}
+
 		// ensure no variable name is used twice
 		for name := range tc.StoreResponseVariables {
 			ix, ok := varNameToSetupTC[name]
@@ -94,6 +98,10 @@ func (s *System) Clean() error {
 
 		if len(tc.Endpoint) == 0 {
 			return fmt.Errorf("test_case %d: endpoint cannot be empty", tcNum)
+		}
+
+		if tc.StatusCode < 100 || tc.StatusCode > 511 {
+			return fmt.Errorf("setup_test_case %d: valid range for status_code is 100-511", tcNum)
 		}
 
 		if !strings.HasPrefix(tc.Endpoint, "/") {

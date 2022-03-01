@@ -53,6 +53,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					ResponseBody: true,
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
+					StatusCode:   http.StatusOK,
 					Position:     1,
 				},
 			},
@@ -73,6 +74,42 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			name: "should_error_for_wrong_status_code",
+			fields: fields{
+				vm: emptyVM(),
+			},
+			args: args{
+				ctx: context.Background(),
+				setupTC: &immune.SetupTestCase{
+					StoreResponseVariables: immune.S{
+						"user_id": "user_id",
+					},
+					RequestBody: immune.M{
+						"username": "daniel",
+						"email":    "daniel@gmail.com",
+						"phone":    113234294,
+					},
+					ResponseBody: true,
+					Endpoint:     "/create_user",
+					HTTPMethod:   "POST",
+					StatusCode:   http.StatusUnauthorized,
+					Position:     1,
+				},
+			},
+			arrangeFn: func() func() {
+				httpmock.Activate()
+
+				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/create_user",
+					httpmock.NewStringResponder(http.StatusOK, `{"user_id":"1223-242-2322"}`))
+
+				return func() {
+					httpmock.DeactivateAndReset()
+				}
+			},
+			wantErrMsg: "setup_test_case 1: wants status code 401 but got status code 200",
+			wantErr:    true,
+		},
+		{
 			name: "should_error_for_url_variable_not_found_in_variable_map",
 			fields: fields{
 				vm: emptyVM(),
@@ -89,6 +126,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					ResponseBody: true,
 					Endpoint:     "/update_user/{user_id}",
 					HTTPMethod:   "PUT",
+					StatusCode:   http.StatusOK,
 					Position:     1,
 				},
 			},
@@ -115,6 +153,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					ResponseBody: true,
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
+					StatusCode:   http.StatusOK,
 					Position:     1,
 				},
 			},
@@ -139,6 +178,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					ResponseBody: true,
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
+					StatusCode:   http.StatusOK,
 					Position:     1,
 				},
 			},
@@ -171,6 +211,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					ResponseBody: true,
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
+					StatusCode:   http.StatusOK,
 					Position:     1,
 				},
 			},
@@ -206,6 +247,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					ResponseBody: true,
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
+					StatusCode:   http.StatusOK,
 					Position:     1,
 				},
 			},
@@ -238,6 +280,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					ResponseBody: false,
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
+					StatusCode:   http.StatusOK,
 					Position:     1,
 				},
 			},
