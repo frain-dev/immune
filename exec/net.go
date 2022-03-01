@@ -189,8 +189,7 @@ func (ex *Executor) sendRequest(ctx context.Context, r *request) (*response, err
 	}
 	defer resp.Body.Close()
 
-	buf := make([]byte, 0)
-	buf, err = io.ReadAll(resp.Body)
+	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

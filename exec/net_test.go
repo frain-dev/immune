@@ -317,12 +317,8 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 
 func TestExecutor_sendRequest(t *testing.T) {
 	type fields struct {
-		callbackIDLocation     string
-		baseURL                string
-		maxCallbackWaitSeconds uint
-		s                      immune.CallbackServer
-		client                 *http.Client
-		vm                     *immune.VariableMap
+		s  immune.CallbackServer
+		vm *immune.VariableMap
 	}
 
 	ex := NewExecutor(nil, http.DefaultClient, nil, 10, "", "")
@@ -343,7 +339,8 @@ func TestExecutor_sendRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
+			ex.vm = tt.fields.vm
+			ex.s = tt.fields.s
 			got, err := ex.sendRequest(tt.args.ctx, tt.args.r)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Executor.sendRequest() error = %v, wantErr %v", err, tt.wantErr)
