@@ -70,6 +70,25 @@ func TestVariableMap_ProcessResponse(t *testing.T) {
 			wantErrMsg:      "variable status is of type bool in the response body, only string & integer is currently supported",
 			wantErr:         true,
 		},
+		{
+			name: "should_error_for_field_not_found",
+			args: args{
+				ctx: context.Background(),
+				variableToField: S{
+					"app_id": "data.uid",
+				},
+				values: M{
+					"status":  true,
+					"message": "fetched application successfully",
+					"data": map[string]interface{}{
+						"title": "retro-app",
+					},
+				},
+			},
+			wantVariableMap: M{},
+			wantErrMsg:      "field data.uid does not exist",
+			wantErr:         true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -348,7 +367,7 @@ func Test_getKeyInMap(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "should_error_for_field_not_exists",
+			name: "should_error_for_field_not_exists_1",
 			args: args{
 				field: "data",
 				resp: M{
@@ -360,7 +379,7 @@ func Test_getKeyInMap(t *testing.T) {
 			wantErr:    true,
 		},
 		{
-			name: "should_error_for_field_not_exists",
+			name: "should_error_for_field_not_exists_2",
 			args: args{
 				field: "data.uid",
 				resp: M{
@@ -372,13 +391,26 @@ func Test_getKeyInMap(t *testing.T) {
 			wantErrMsg: "field data.uid does not exist",
 			wantErr:    true,
 		},
+		{
+			name: "should_error_for_field_not_exists_3",
+			args: args{
+				field: "data.ref.uid",
+				resp: M{
+					"status":  false,
+					"message": "fetched app",
+					"data":    map[string]interface{}{},
+				},
+			},
+			wantErrMsg: "the field data.ref, does not exist",
+			wantErr:    true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := getKeyInMap(tt.args.field, tt.args.resp)
 			if tt.wantErr {
 				require.Error(t, err)
-				require.Equal(t, err.Error(), tt.wantErrMsg)
+				require.Equal(t, tt.wantErrMsg, err.Error())
 				return
 			}
 

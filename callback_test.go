@@ -78,6 +78,30 @@ func TestInjectCallbackID(t *testing.T) {
 			wantErr:    true,
 			wantErrMsg: "the field data, is not an object in the request body",
 		},
+		{
+			name: "should_error_for_incorrect_field_type",
+			args: args{
+				field: "data",
+				v:     "123-564-2242-32823",
+				r: M{
+					"ref": 123,
+				},
+			},
+			wantErr:    true,
+			wantErrMsg: "the field data, does not exist",
+		},
+		{
+			name: "should_error_for_field_not_found",
+			args: args{
+				field: "data.ref.marvel",
+				v:     "123-564-2242-32823",
+				r: M{
+					"data": map[string]interface{}{},
+				},
+			},
+			wantErr:    true,
+			wantErrMsg: "the field data.ref, does not exist",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
