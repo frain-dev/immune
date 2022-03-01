@@ -10,24 +10,23 @@ import (
 	"time"
 
 	"github.com/frain-dev/immune"
-	"github.com/frain-dev/immune/callback"
 	"github.com/frain-dev/immune/url"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
-// Executor is used execute all tests
+// Executor is used to execute tests
 type Executor struct {
 	callbackIDLocation     string
 	baseURL                string
 	maxCallbackWaitSeconds uint
-	s                      *callback.Server
+	s                      immune.CallbackServer
 	client                 *http.Client
 	vm                     *immune.VariableMap
 }
 
-func NewExecutor(s *callback.Server, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Executor {
+func NewExecutor(s immune.CallbackServer, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Executor {
 	return &Executor{
 		s:                      s,
 		vm:                     vm,
@@ -70,7 +69,7 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 
 	if setupTC.ResponseBody {
 		if resp.body.Len() == 0 {
-			return errors.Wrapf(err, "setup_test_case %d: wants response body but got no response body", setupTC.Position)
+			return errors.Errorf("setup_test_case %d: wants response body but got no response body", setupTC.Position)
 		}
 
 		m := immune.M{}
@@ -87,7 +86,7 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 		}
 	} else {
 		if resp.body.Len() > 0 {
-			return errors.Wrapf(err, "setup_test_case %d: does not want a response body but got a response body: '%s'", setupTC.Position, resp.body.String())
+			return errors.Errorf("setup_test_case %d: does not want a response body but got a response body: '%s'", setupTC.Position, resp.body.String())
 		}
 	}
 
@@ -190,8 +189,7 @@ func (ex *Executor) sendRequest(ctx context.Context, r *request) (*response, err
 	}
 	defer resp.Body.Close()
 
-	buf := make([]byte, 0)
-	buf, err = io.ReadAll(resp.Body)
+	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

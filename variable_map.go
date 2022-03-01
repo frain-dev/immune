@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 type VariableMap struct {
@@ -15,7 +13,7 @@ type VariableMap struct {
 // GetString gets the value of key from the variable map, if the value
 // isn't of the string type, it will be converted to string via fmt.Sprintf
 // and returned
-func (v VariableMap) GetString(key string) (string, bool) {
+func (v *VariableMap) GetString(key string) (string, bool) {
 	value, ok := v.VariableToValue[key]
 	if !ok {
 		return "", false
@@ -26,18 +24,18 @@ func (v VariableMap) GetString(key string) (string, bool) {
 		return str, true
 	}
 
-	return fmt.Sprintf("%s", value), true
+	return fmt.Sprintf("%v", value), true
 }
 
 // Get gets the value of key from the variable map
-func (v VariableMap) Get(key string) (interface{}, bool) {
+func (v *VariableMap) Get(key string) (interface{}, bool) {
 	value, ok := v.VariableToValue[key]
 	return value, ok
 }
 
 // ProcessResponse takes the variables declared in variableToField from values, and stores them in the
 // variable map.
-func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, values M) error {
+func (v *VariableMap) ProcessResponse(ctx context.Context, variableToField S, values M) error {
 	for varName, field := range variableToField {
 
 		value, err := getKeyInMap(field, values)
@@ -50,7 +48,7 @@ func (v VariableMap) ProcessResponse(ctx context.Context, variableToField S, val
 		case string, int, int8, int32, int16, int64:
 			break
 		default:
-			return errors.Errorf("variable %s is of type %T in the response body, only string & integer is currently supported", varName, value)
+			return fmt.Errorf("variable %s is of type %T in the response body, only string & integer is currently supported", varName, value)
 		}
 
 		v.VariableToValue[varName] = value
@@ -65,11 +63,10 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 
 	// we may have separators referencing deeper fields in the response body e.g data.uid
 	parts := strings.Split(field, ".")
-
-	if len(parts) == 0 {
+	if len(parts) < 2 { // if it's less than 2, then there is no '.' in field
 		value, ok = resp[field]
 		if !ok {
-			return nil, errors.Errorf("field %s not found in response", field)
+			return nil, fmt.Errorf("field %s does not exist", field)
 		}
 	} else {
 		lastPart := parts[len(parts)-1]
@@ -80,7 +77,10 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 			return nil, err
 		}
 
-		value = nextLevel[lastPart] // we have reached the last part of the "data.uid"
+		value, ok = nextLevel[lastPart] // we have reached the last part of the "data.uid"
+		if !ok {
+			return nil, fmt.Errorf("field %s does not exist", field)
+		}
 	}
 
 	return value, nil
@@ -97,12 +97,12 @@ func getM(m M, parts []string) (M, error) {
 	for _, part := range parts {
 		v, ok = nextLevel[part]
 		if !ok {
-			return nil, errors.Errorf("the field %s, does not exist", track+part) // avoid printing the trailing dot
+			return nil, fmt.Errorf("the field %s, does not exist", track+part) // avoid printing the trailing dot
 		}
 
 		nextLevel, ok = v.(map[string]interface{})
 		if !ok {
-			return nil, errors.Errorf("the field %s, is not an object in response body", track+part)
+			return nil, fmt.Errorf("the field %s, is not an object in the given map", track+part)
 		}
 
 		track += part + "."

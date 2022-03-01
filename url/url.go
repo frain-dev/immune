@@ -8,38 +8,39 @@ import (
 )
 
 type URL struct {
-	segments []*segment
-	url      string
+	variables []string
+	url       string
 }
 
 // Parse parses an url string and records the segments containing variable references
 // The returned URL object contains a slice of these segments and the original url.
 //
 // It works by looking for the first occurrence of the '{' character and then a corresponding '}'
-// character, when the first segment is found the ending index is added to i, the same is done for
-// subsequent segments. By pushing i forward as we iterate,we can track how far along in the original
-// string we have come.
+// character repeatedly, recording all encountered variables until the end.
 func Parse(s string) (*URL, error) {
 	if len(s) == 0 {
 		return nil, errors.New("url is empty")
 	}
 
-	u := &URL{segments: []*segment{}, url: s}
-	i := 0
+	u := &URL{variables: []string{}, url: s}
+
+	// keep a set of encountered variables, since they will be all
+	// replaced by the same value when ProcessWithVariableMap is called,
+	// it makes sense to record just one instance if it
+	set := map[string]bool{}
 	for {
-		seg := nextSegment(s)
-		if seg == nil {
+		v := nextVariable(s)
+		if v == nil {
 			break
 		}
+		s = s[v.closing:]
 
-		s = s[seg.end:] // cut s so the next call to nextSegment has a smaller string to run over
+		if v.name == "" || set[v.name] { // if we've encountered this variable already or the segment is empty like this {}, continue
+			continue
+		}
+		set[v.name] = true
 
-		// add the last recorded index addition
-		seg.end = seg.end + i
-		seg.start = seg.start + i
-		i += seg.end // increment the index again
-
-		u.segments = append(u.segments, seg)
+		u.variables = append(u.variables, v.name)
 	}
 
 	return u, nil
@@ -47,35 +48,31 @@ func Parse(s string) (*URL, error) {
 
 // ProcessWithVariableMap replaces the url variable segments with their corresponding values from the variable map
 func (u *URL) ProcessWithVariableMap(vm *immune.VariableMap) (string, error) {
-	if len(u.segments) == 0 {
+	if len(u.variables) == 0 {
 		return u.url, nil
 	}
 
-	var result string
+	result := u.url
 
-	url := u.url
-
-	for _, s := range u.segments {
-		v, ok := vm.GetString(s.name)
+	for _, variable := range u.variables {
+		v, ok := vm.GetString(variable)
 		if !ok {
-			return "", errors.Errorf("variable %s not found in variable map", s.name)
+			return "", errors.Errorf("variable %s not found in variable map", variable)
 		}
 
-		result = strings.Replace(url, url[s.start:s.end+1], v, -1)
-		url = url[s.end+1:]
+		result = strings.Replace(result, "{"+variable+"}", v, -1)
 	}
 
 	return result, nil
 }
 
-type segment struct {
-	start int
-	end   int
-	name  string
+type variableSegment struct {
+	name    string
+	closing int
 }
 
-// nextSegment looks for the first variable segment in the given string
-func nextSegment(s string) *segment {
+// nextVariable looks for the first variable in the given string
+func nextVariable(s string) *variableSegment {
 	open := strings.IndexByte(s, '{')
 	if open < 0 {
 		return nil
@@ -93,9 +90,15 @@ func nextSegment(s string) *segment {
 		panic("url: variable closing delimiter '}' is missing")
 	}
 
-	return &segment{
-		start: open,
-		end:   closing,
-		name:  s[open+1 : closing],
+	if s[open:closing+1] == "{}" {
+		return &variableSegment{
+			name:    "",
+			closing: closing,
+		}
+	}
+
+	return &variableSegment{
+		name:    s[open+1 : closing],
+		closing: closing,
 	}
 }

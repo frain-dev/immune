@@ -24,15 +24,14 @@ func (r *request) processWithVariableMap(vm *immune.VariableMap) error {
 // variables with their corresponding values from the variable map
 func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 	for k, v := range m {
-		switch v.(type) {
+		switch value := v.(type) {
 		case string: // only string values in the map can reference variables in the format "{variable_name}"
-			str := v.(string)
-			if len(str) < 3 { // at least three characters must be present in the format {x}
+			if len(value) < 3 { // at least three characters must be present in the format {x}
 				continue
 			}
 
-			if strings.HasPrefix(str, "{") && strings.HasSuffix(str, "}") {
-				varName := str[1 : len(str)-1]
+			if strings.HasPrefix(value, "{") && strings.HasSuffix(value, "}") {
+				varName := value[1 : len(value)-1]
 				value, exists := vm.Get(varName)
 				if !exists {
 					return errors.Errorf("variable %s does not exist in variable map", varName)
@@ -42,7 +41,7 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 			}
 		case map[string]interface{}:
 			// recursively traverse values with the type map[string]interface{}
-			err := r.traverse(v.(map[string]interface{}), vm)
+			err := r.traverse(value, vm)
 			if err != nil {
 				return err
 			}
