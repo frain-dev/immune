@@ -1,6 +1,7 @@
 package immune
 
 type SetupTestCase struct {
+	Name                   string `json:"name"`
 	StoreResponseVariables S      `json:"store_response_variables"`
 	RequestBody            M      `json:"request_body"`
 	ResponseBody           bool   `json:"response_body"`
@@ -17,6 +18,7 @@ type SetupTestCaseReport struct {
 }
 
 type TestCase struct {
+	Setup        []string `json:"setup"`
 	Position     int      `json:"-"`
 	StatusCode   int      `json:"status_code"`
 	HTTPMethod   Method   `json:"http_method"`
