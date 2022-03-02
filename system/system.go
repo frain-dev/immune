@@ -15,6 +15,8 @@ import (
 // System represents the entire suite to be run against an API
 type System struct {
 	BaseURL        string                       `json:"base_url"`
+	EventTargetURL string                       `json:"event_target_url"`
+	Database       immune.Database              `json:"database"`
 	Callback       immune.CallbackConfiguration `json:"callback"`
 	Variables      *immune.VariableMap          `json:"-"`
 	SetupTestCases []immune.SetupTestCase       `json:"setup_test_cases"`
