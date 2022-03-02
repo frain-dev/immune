@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/frain-dev/immune"
+	"github.com/frain-dev/immune/database"
 	"github.com/frain-dev/immune/url"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -21,17 +22,19 @@ type Executor struct {
 	callbackIDLocation     string
 	baseURL                string
 	maxCallbackWaitSeconds uint
-	s                      immune.CallbackServer
 	client                 *http.Client
+	dbTruncator            database.Truncator
 	vm                     *immune.VariableMap
+	s                      immune.CallbackServer
 }
 
-func NewExecutor(s immune.CallbackServer, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string) *Executor {
+func NewExecutor(s immune.CallbackServer, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string, dbTruncator database.Truncator) *Executor {
 	return &Executor{
 		s:                      s,
 		vm:                     vm,
 		client:                 client,
 		baseURL:                baseURL,
+		dbTruncator:            dbTruncator,
 		callbackIDLocation:     callbackIDLocation,
 		maxCallbackWaitSeconds: maxCallbackWaitSeconds,
 	}
@@ -46,7 +49,7 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 
 	result, err := u.ProcessWithVariableMap(ex.vm)
 	if err != nil {
-		return errors.Wrapf(err, "setup_test_case %d: failed to process parsed url with variable map", setupTC.Position)
+		return errors.Wrapf(err, "setup_test_case %s: failed to process parsed url with variable map", setupTC.Name)
 	}
 
 	r := &request{
@@ -58,7 +61,7 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 
 	err = r.processWithVariableMap(ex.vm)
 	if err != nil {
-		return errors.Wrapf(err, "setup_test_case %d: failed to process request body with variable map", setupTC.Position)
+		return errors.Wrapf(err, "setup_test_case %s: failed to process request body with variable map", setupTC.Name)
 	}
 	//log.Infof("setup_test_case %d: request body: %s", setupTC.Position, pretty.Sprint(r.body))
 
@@ -68,24 +71,24 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 	}
 
 	if setupTC.StatusCode != resp.statusCode {
-		return errors.Errorf("setup_test_case %d: wants status code %d but got status code %d", setupTC.Position, setupTC.StatusCode, resp.statusCode)
+		return errors.Errorf("setup_test_case %s: wants status code %d but got status code %d, response body: %s", setupTC.Name, setupTC.StatusCode, resp.statusCode, resp.body.String())
 	}
 
 	if setupTC.ResponseBody {
 		if resp.body.Len() == 0 {
-			return errors.Errorf("setup_test_case %d: wants response body but got no response body", setupTC.Position)
+			return errors.Errorf("setup_test_case %s: wants response body but got no response body", setupTC.Name)
 		}
 
 		m := immune.M{}
 		err = resp.Decode(&m)
 		if err != nil {
-			return errors.Wrapf(err, "setup_test_case %d: failed to decode response body", setupTC.Position)
+			return errors.Wrapf(err, "setup_test_case %s: failed to decode response body: response body: %s", setupTC.Name, resp.body.String())
 		}
 
 		if setupTC.StoreResponseVariables != nil {
 			err = ex.vm.ProcessResponse(ctx, setupTC.StoreResponseVariables, m)
 			if err != nil {
-				return errors.Wrapf(err, "setup_test_case %d: failed to process response body", setupTC.Position)
+				return errors.Wrapf(err, "setup_test_case %s: failed to process response body: response body: %s", setupTC.Name, resp.body.String())
 			}
 		}
 	} else {
@@ -175,7 +178,7 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 		}
 	}
 
-	return nil
+	return ex.dbTruncator.Truncate(ctx)
 }
 
 func (ex *Executor) sendRequest(ctx context.Context, r *request) (*response, error) {

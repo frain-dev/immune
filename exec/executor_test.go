@@ -3,7 +3,6 @@ package exec
 import (
 	"context"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -13,7 +12,7 @@ import (
 )
 
 func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
-	ex := NewExecutor(nil, http.DefaultClient, nil, 10, "http://localhost:5005", "data")
+	ex := NewExecutor(nil, http.DefaultClient, nil, 10, "http://localhost:5005", "data", nil)
 
 	emptyVM := func() *immune.VariableMap {
 		return &immune.VariableMap{VariableToValue: immune.M{}}
@@ -351,44 +350,6 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			}
 			if err := ex.ExecuteTestCase(tt.args.ctx, tt.args.tc); (err != nil) != tt.wantErr {
 				t.Errorf("Executor.ExecuteTestCase() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestExecutor_sendRequest(t *testing.T) {
-	type fields struct {
-		s  immune.CallbackServer
-		vm *immune.VariableMap
-	}
-
-	ex := NewExecutor(nil, http.DefaultClient, nil, 10, "", "")
-
-	type args struct {
-		ctx context.Context
-		r   *request
-	}
-	tests := []struct {
-		name      string
-		fields    fields
-		args      args
-		arrangeFn func() func()
-		want      *response
-		wantErr   bool
-	}{
-		//{},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ex.vm = tt.fields.vm
-			ex.s = tt.fields.s
-			got, err := ex.sendRequest(tt.args.ctx, tt.args.r)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Executor.sendRequest() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Executor.sendRequest() = %v, want %v", got, tt.want)
 			}
 		})
 	}
