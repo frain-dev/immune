@@ -31,6 +31,7 @@
                 "logo_url": "",
                 "name": "retro-group-64"
             },
+            "status_code": 201,
             "response_body": true
         },
         {
@@ -43,6 +44,7 @@
                 "name": "retro-app-64",
                 "support_email": "retro_app@gmail.com"
             },
+            "status_code": 201,
             "response_body": true
         },
         {
@@ -59,6 +61,7 @@
                     "payment.failed"
                 ]
             },
+            "status_code": 201,
             "response_body": true
         },
         {
@@ -75,6 +78,7 @@
                     "payment.success"
                 ]
             },
+            "status_code": 201,
             "response_body": true
         },
         {
@@ -91,6 +95,7 @@
                     "*"
                 ]
             },
+            "status_code": 201,
             "response_body": true
         }
     ],
@@ -110,6 +115,7 @@
                     "marvel": "stark"
                 }
             },
+            "status_code": 201,
             "response_body": true
         },
         {
@@ -127,6 +133,7 @@
                     "marvel": "stark"
                 }
             },
+            "status_code": 201,
             "response_body": true
         }
     ]

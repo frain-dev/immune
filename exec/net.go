@@ -67,6 +67,10 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 		return err
 	}
 
+	if setupTC.StatusCode != resp.statusCode {
+		return errors.Errorf("setup_test_case %d: wants status code %d but got status code %d", setupTC.Position, setupTC.StatusCode, resp.statusCode)
+	}
+
 	if setupTC.ResponseBody {
 		if resp.body.Len() == 0 {
 			return errors.Errorf("setup_test_case %d: wants response body but got no response body", setupTC.Position)
@@ -129,6 +133,10 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 	resp, err := ex.sendRequest(ctx, r)
 	if err != nil {
 		return err
+	}
+
+	if tc.StatusCode != resp.statusCode {
+		return errors.Errorf("test_case %d: wants status code %d but got status code %d", tc.Position, tc.StatusCode, resp.statusCode)
 	}
 
 	if tc.ResponseBody {
