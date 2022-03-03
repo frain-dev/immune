@@ -44,7 +44,7 @@ func NewExecutor(s immune.CallbackServer, client *http.Client, vm *immune.Variab
 func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.SetupTestCase) error {
 	u, err := url.Parse(fmt.Sprintf("%s%s", ex.baseURL, setupTC.Endpoint))
 	if err != nil {
-		return errors.Wrapf(err, "setup_test_case %d: failed to parse url", setupTC.Position)
+		return errors.Wrapf(err, "setup_test_case %s: failed to parse url", setupTC.Name)
 	}
 
 	result, err := u.ProcessWithVariableMap(ex.vm)
@@ -63,7 +63,7 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 	if err != nil {
 		return errors.Wrapf(err, "setup_test_case %s: failed to process request body with variable map", setupTC.Name)
 	}
-	//log.Infof("setup_test_case %d: request body: %s", setupTC.Position, pretty.Sprint(r.body))
+	//log.Infof("setup_test_case %s: request body: %s", setupTC.Name, pretty.Sprint(r.body))
 
 	resp, err := ex.sendRequest(ctx, r)
 	if err != nil {
@@ -93,7 +93,7 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 		}
 	} else {
 		if resp.body.Len() > 0 {
-			return errors.Errorf("setup_test_case %d: does not want a response body but got a response body: '%s'", setupTC.Position, resp.body.String())
+			return errors.Errorf("setup_test_case %s: does not want a response body but got a response body: '%s'", setupTC.Name, resp.body.String())
 		}
 	}
 
@@ -104,12 +104,12 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) error {
 	u, err := url.Parse(fmt.Sprintf("%s%s", ex.baseURL, tc.Endpoint))
 	if err != nil {
-		return errors.Wrapf(err, "test_case %d: failed to parse url", tc.Position)
+		return errors.Wrapf(err, "test_case %s: failed to parse url", tc.Name)
 	}
 
 	result, err := u.ProcessWithVariableMap(ex.vm)
 	if err != nil {
-		return errors.Wrapf(err, "test_case %d: failed to process parsed url with variable map", tc.Position)
+		return errors.Wrapf(err, "test_case %s: failed to process parsed url with variable map", tc.Name)
 	}
 
 	var uid string
@@ -117,7 +117,7 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 		uid = uuid.New().String()
 		err = immune.InjectCallbackID(ex.callbackIDLocation, uid, tc.RequestBody)
 		if err != nil {
-			return errors.Wrapf(err, "test_case %d: failed to inject callback id into request body", tc.Position)
+			return errors.Wrapf(err, "test_case %s: failed to inject callback id into request body", tc.Name)
 		}
 	}
 
@@ -130,7 +130,7 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 
 	err = r.processWithVariableMap(ex.vm)
 	if err != nil {
-		return errors.Wrapf(err, "test_case %d: failed to process request body with variable map", tc.Position)
+		return errors.Wrapf(err, "test_case %s: failed to process request body with variable map", tc.Name)
 	}
 
 	resp, err := ex.sendRequest(ctx, r)
@@ -139,23 +139,23 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 	}
 
 	if tc.StatusCode != resp.statusCode {
-		return errors.Errorf("test_case %d: wants status code %d but got status code %d", tc.Position, tc.StatusCode, resp.statusCode)
+		return errors.Errorf("test_case %s: wants status code %d but got status code %d", tc.Name, tc.StatusCode, resp.statusCode)
 	}
 
 	if tc.ResponseBody {
 		if resp.body.Len() == 0 {
-			return errors.Errorf("test_case %d: wants response body but got no response body: %+v", tc.Position, resp)
+			return errors.Errorf("test_case %s: wants response body but got no response body: %+v", tc.Name, resp)
 		}
 
 		m := immune.M{}
 		err = resp.Decode(&m)
 		if err != nil {
-			return errors.Errorf("test_case %d: failed to decode response body: %+v", tc.Position, resp)
+			return errors.Errorf("test_case %s: failed to decode response body: %+v", tc.Name, resp)
 		}
 
 	} else {
 		if resp.body.Len() > 0 {
-			return errors.Wrapf(err, "test_case %d: does not want a response body but got a response body: '%s'", tc.Position, resp.body.String())
+			return errors.Wrapf(err, "test_case %s: does not want a response body but got a response body: '%s'", tc.Name, resp.body.String())
 		}
 	}
 
@@ -166,14 +166,14 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 		for i := uint(1); i <= tc.Callback.Times; i++ {
 			select {
 			case <-cctx.Done():
-				log.Infof("succesfully received %d callbacks for test_case %d before max callback wait seconds elapsed", i, tc.Position)
+				log.Infof("succesfully received %d callbacks for test_case %s before max callback wait seconds elapsed", i, tc.Name)
 				break
 			default:
 				sig := ex.s.ReceiveCallback()
 				if sig.ImmuneCallBackID != uid {
-					return errors.Errorf("test_case %d: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Position, uid, sig.ImmuneCallBackID)
+					return errors.Errorf("test_case %s: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Name, uid, sig.ImmuneCallBackID)
 				}
-				log.Infof("callback %d for test_case %d received", i, tc.Position)
+				log.Infof("callback %d for test_case %s received", i, tc.Name)
 			}
 		}
 	}

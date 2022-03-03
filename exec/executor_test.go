@@ -41,6 +41,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				setupTC: &immune.SetupTestCase{
+					Name: "abc",
 					StoreResponseVariables: immune.S{
 						"user_id": "user_id",
 					},
@@ -53,7 +54,6 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
 					StatusCode:   http.StatusOK,
-					Position:     1,
 				},
 			},
 			arrangeFn: func() func() {
@@ -80,6 +80,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				setupTC: &immune.SetupTestCase{
+					Name: "abc",
 					StoreResponseVariables: immune.S{
 						"user_id": "user_id",
 					},
@@ -92,7 +93,6 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
 					StatusCode:   http.StatusUnauthorized,
-					Position:     1,
 				},
 			},
 			arrangeFn: func() func() {
@@ -105,7 +105,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					httpmock.DeactivateAndReset()
 				}
 			},
-			wantErrMsg: "setup_test_case 1: wants status code 401 but got status code 200",
+			wantErrMsg: `setup_test_case abc: wants status code 401 but got status code 200, response body: {"user_id":"1223-242-2322"}`,
 			wantErr:    true,
 		},
 		{
@@ -116,6 +116,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				setupTC: &immune.SetupTestCase{
+					Name:                   "abc",
 					StoreResponseVariables: nil,
 					RequestBody: immune.M{
 						"username": "dan",
@@ -126,12 +127,11 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					Endpoint:     "/update_user/{user_id}",
 					HTTPMethod:   "PUT",
 					StatusCode:   http.StatusOK,
-					Position:     1,
 				},
 			},
 			arrangeFn:       nil,
 			wantVariableMap: nil,
-			wantErrMsg:      "setup_test_case 1: failed to process parsed url with variable map: variable user_id not found in variable map",
+			wantErrMsg:      "setup_test_case abc: failed to process parsed url with variable map: variable user_id not found in variable map",
 			wantErr:         true,
 		},
 		{
@@ -142,6 +142,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				setupTC: &immune.SetupTestCase{
+					Name:                   "abc",
 					StoreResponseVariables: nil,
 					RequestBody: immune.M{
 						"user_details": map[string]interface{}{
@@ -153,12 +154,11 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
 					StatusCode:   http.StatusOK,
-					Position:     1,
 				},
 			},
 			arrangeFn:       nil,
 			wantVariableMap: nil,
-			wantErrMsg:      "setup_test_case 1: failed to process request body with variable map: variable user_id does not exist in variable map",
+			wantErrMsg:      "setup_test_case abc: failed to process request body with variable map: variable user_id does not exist in variable map",
 			wantErr:         true,
 		},
 		{
@@ -169,6 +169,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				setupTC: &immune.SetupTestCase{
+					Name: "abc",
 					RequestBody: immune.M{
 						"username": "daniel",
 						"email":    "daniel@gmail.com",
@@ -178,7 +179,6 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
 					StatusCode:   http.StatusOK,
-					Position:     1,
 				},
 			},
 			arrangeFn: func() func() {
@@ -191,7 +191,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					httpmock.DeactivateAndReset()
 				}
 			},
-			wantErrMsg: "setup_test_case 1: wants response body but got no response body",
+			wantErrMsg: "setup_test_case abc: wants response body but got no response body",
 			wantErr:    true,
 		},
 		{
@@ -202,6 +202,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				setupTC: &immune.SetupTestCase{
+					Name: "abc",
 					RequestBody: immune.M{
 						"username": "daniel",
 						"email":    "daniel@gmail.com",
@@ -211,7 +212,6 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
 					StatusCode:   http.StatusOK,
-					Position:     1,
 				},
 			},
 			arrangeFn: func() func() {
@@ -224,7 +224,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					httpmock.DeactivateAndReset()
 				}
 			},
-			wantErrMsg: "setup_test_case 1: failed to decode response body: json: cannot unmarshal number into Go value of type immune.M",
+			wantErrMsg: "setup_test_case abc: failed to decode response body: response body: : json: cannot unmarshal number into Go value of type immune.M",
 			wantErr:    true,
 		},
 		{
@@ -235,6 +235,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				setupTC: &immune.SetupTestCase{
+					Name: "abc",
 					StoreResponseVariables: immune.S{
 						"user_id": "user_id",
 					},
@@ -247,7 +248,6 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
 					StatusCode:   http.StatusOK,
-					Position:     1,
 				},
 			},
 			arrangeFn: func() func() {
@@ -260,7 +260,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					httpmock.DeactivateAndReset()
 				}
 			},
-			wantErrMsg: "setup_test_case 1: failed to process response body: field user_id does not exist",
+			wantErrMsg: "setup_test_case abc: failed to process response body: response body: : field user_id does not exist",
 			wantErr:    true,
 		},
 		{
@@ -271,6 +271,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				setupTC: &immune.SetupTestCase{
+					Name: "abc",
 					RequestBody: immune.M{
 						"username": "daniel",
 						"email":    "daniel@gmail.com",
@@ -280,7 +281,6 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					Endpoint:     "/create_user",
 					HTTPMethod:   "POST",
 					StatusCode:   http.StatusOK,
-					Position:     1,
 				},
 			},
 			arrangeFn: func() func() {
@@ -293,7 +293,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					httpmock.DeactivateAndReset()
 				}
 			},
-			wantErrMsg: "setup_test_case 1: does not want a response body but got a response body: '{}'",
+			wantErrMsg: "setup_test_case abc: does not want a response body but got a response body: '{}'",
 			wantErr:    true,
 		},
 	}

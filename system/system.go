@@ -90,8 +90,6 @@ func (s *System) Clean() error {
 				return fmt.Errorf("test_case %d: if callback is enabled then times must be greater than 0", tcNum)
 			}
 		}
-
-		s.TestCases[i].Position = tcNum
 	}
 
 	return nil
