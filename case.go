@@ -18,6 +18,7 @@ type SetupTestCaseReport struct {
 }
 
 type TestCase struct {
+	Name         string   `json:"name"`
 	Setup        []string `json:"setup"`
 	Position     int      `json:"-"`
 	StatusCode   int      `json:"status_code"`

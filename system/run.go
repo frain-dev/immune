@@ -72,10 +72,11 @@ func (s *System) Run(ctx context.Context) error {
 				}
 			}
 		}
-		err = ex.ExecuteTestCase(ctx, &s.TestCases[i])
+		err = ex.ExecuteTestCase(ctx, tc)
 		if err != nil {
 			return err
 		}
+		log.Infof("test_case %s passed", tc.Name)
 	}
 
 	log.Info("finished execution of test cases")

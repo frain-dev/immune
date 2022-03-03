@@ -59,44 +59,13 @@ func (s *System) Clean() error {
 		s.Callback.MaxWaitSeconds = maxCallbackWait
 	}
 
-	varNameToSetupTC := map[string]int{}
-
-	for i := range s.SetupTestCases {
-		tc := &s.SetupTestCases[i]
-		tcNum := i + 1
-
-		if tc.StatusCode < 100 || tc.StatusCode > 511 {
-			return fmt.Errorf("setup_test_case %d: valid range for status_code is 100-511", tcNum)
-		}
-
-		// ensure no variable name is used twice
-		for name := range tc.StoreResponseVariables {
-			ix, ok := varNameToSetupTC[name]
-			if ok {
-				return fmt.Errorf("setup_test_case %d: variable name %s already used in setup_test_case %d", tcNum, name, ix)
-			}
-
-			varNameToSetupTC[name] = tcNum
-		}
-
-		if len(tc.Endpoint) == 0 {
-			return fmt.Errorf("setup_test_case %d: endpoint cannot be empty", tcNum)
-		}
-
-		if !strings.HasPrefix(tc.Endpoint, "/") {
-			return fmt.Errorf("setup_test_case %d: endpoint must begin with /", tcNum)
-		}
-
-		if !tc.HTTPMethod.IsValid() {
-			return fmt.Errorf("setup_test_case %d: invalid method: %s", tcNum, tc.HTTPMethod.String())
-		}
-
-		s.SetupTestCases[i].Position = tcNum
-	}
-
 	for i := range s.TestCases {
 		tc := &s.TestCases[i]
 		tcNum := i + 1
+
+		if tc.Name == "" {
+			return errors.New("test case name cannot be empty")
+		}
 
 		if len(tc.Endpoint) == 0 {
 			return fmt.Errorf("test_case %d: endpoint cannot be empty", tcNum)
