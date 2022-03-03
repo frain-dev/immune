@@ -70,6 +70,8 @@ func (s *System) Run(ctx context.Context) error {
 				if err != nil {
 					return err
 				}
+			default:
+				return errors.Errorf("unknown setup %s, in test case %s", setupName, tc.Name)
 			}
 		}
 		err = ex.ExecuteTestCase(ctx, tc)
