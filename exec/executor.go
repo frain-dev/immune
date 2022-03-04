@@ -12,7 +12,6 @@ import (
 	"github.com/frain-dev/immune"
 	"github.com/frain-dev/immune/database"
 	"github.com/frain-dev/immune/url"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -22,16 +21,25 @@ type Executor struct {
 	callbackIDLocation     string
 	baseURL                string
 	maxCallbackWaitSeconds uint
+	idFn                   func() string
 	client                 *http.Client
 	dbTruncator            database.Truncator
 	vm                     *immune.VariableMap
 	s                      immune.CallbackServer
 }
 
-func NewExecutor(s immune.CallbackServer, client *http.Client, vm *immune.VariableMap, maxCallbackWaitSeconds uint, baseURL string, callbackIDLocation string, dbTruncator database.Truncator) *Executor {
+func NewExecutor(
+	s immune.CallbackServer,
+	client *http.Client,
+	vm *immune.VariableMap,
+	maxCallbackWaitSeconds uint,
+	baseURL string,
+	callbackIDLocation string,
+	dbTruncator database.Truncator, idFn func() string) *Executor {
 	return &Executor{
 		s:                      s,
 		vm:                     vm,
+		idFn:                   idFn,
 		client:                 client,
 		baseURL:                baseURL,
 		dbTruncator:            dbTruncator,
@@ -114,7 +122,7 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 
 	var uid string
 	if tc.Callback.Enabled {
-		uid = uuid.New().String()
+		uid = ex.idFn()
 		err = immune.InjectCallbackID(ex.callbackIDLocation, uid, tc.RequestBody)
 		if err != nil {
 			return errors.Wrapf(err, "test_case %s: failed to inject callback id into request body", tc.Name)

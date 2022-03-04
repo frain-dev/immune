@@ -9,6 +9,7 @@ import (
 	"github.com/frain-dev/immune/database"
 	"github.com/frain-dev/immune/exec"
 	"github.com/frain-dev/immune/funcs"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -38,7 +39,10 @@ func (s *System) Run(ctx context.Context) error {
 		return err
 	}
 
-	ex := exec.NewExecutor(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation, truncator)
+	idFn := func() string {
+		return uuid.New().String()
+	}
+	ex := exec.NewExecutor(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation, truncator, idFn)
 
 	//log.Info("starting execution of setup test cases")
 	//for i := range s.SetupTestCases {
@@ -50,7 +54,6 @@ func (s *System) Run(ctx context.Context) error {
 	//log.Info("finished execution of setup test cases")
 
 	log.Info("starting execution of test cases")
-
 	for i := range s.TestCases {
 		tc := &s.TestCases[i]
 		for _, setupName := range tc.Setup {
