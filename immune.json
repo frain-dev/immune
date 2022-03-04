@@ -6,101 +6,19 @@
         "route": "/",
         "id_location": "data"
     },
-    "setup_test_cases": [
-        {
-            "store_response_variables": {
-                "group_id": "data.uid"
-            },
-            "http_method": "POST",
-            "endpoint": "/groups",
-            "request_body": {
-                "config": {
-                    "disableEndpoint": true,
-                    "signature": {
-                        "hash": "SHA256",
-                        "header": "X-Retro-Signature"
-                    },
-                    "strategy": {
-                        "default": {
-                            "intervalSeconds": 30,
-                            "retryLimit": 4
-                        },
-                        "type": "default"
-                    }
-                },
-                "logo_url": "",
-                "name": "retro-group-64"
-            },
-            "status_code": 201,
-            "response_body": true
-        },
-        {
-            "store_response_variables": {
-                "app_id": "data.uid"
-            },
-            "http_method": "POST",
-            "endpoint": "/applications?groupID={group_id}",
-            "request_body": {
-                "name": "retro-app-64",
-                "support_email": "retro_app@gmail.com"
-            },
-            "status_code": 201,
-            "response_body": true
-        },
-        {
-            "store_response_variables": {
-                "endpoint_id_1": "data.uid"
-            },
-            "http_method": "POST",
-            "endpoint": "/applications/{app_id}/endpoints",
-            "request_body": {
-                "url": "https://78c0-102-219-153-92.ngrok.io",
-                "secret": "12345",
-                "description": "Local ngrok endpoint",
-                "events": [
-                    "payment.failed"
-                ]
-            },
-            "status_code": 201,
-            "response_body": true
-        },
-        {
-            "store_response_variables": {
-                "endpoint_id_2": "data.uid"
-            },
-            "http_method": "POST",
-            "endpoint": "/applications/{app_id}/endpoints",
-            "request_body": {
-                "url": "https://78c0-102-219-153-92.ngrok.io",
-                "secret": "12345",
-                "description": "Local ngrok endpoint",
-                "events": [
-                    "payment.success"
-                ]
-            },
-            "status_code": 201,
-            "response_body": true
-        },
-        {
-            "store_response_variables": {
-                "endpoint_id_3": "data.uid"
-            },
-            "http_method": "POST",
-            "endpoint": "/applications/{app_id}/endpoints",
-            "request_body": {
-                "url": "https://78c0-102-219-153-92.ngrok.io",
-                "secret": "12345",
-                "description": "Local ngrok endpoint",
-                "events": [
-                    "*"
-                ]
-            },
-            "status_code": 201,
-            "response_body": true
-        }
-    ],
+    "database" : {
+        "type": "mongo",
+        "dsn": "mongodb+srv://admin:6ac23875-24ce-512e-b5f6-c6e837373debfrC7pZUxZiymogxV@cluster1.eqj2e.mongodb.net/convoy-prod-db-immune?retryWrites=true&w=majority"
+    },
+    "event_target_url": "https://c25b-102-219-153-90.eu.ngrok.io",
     "test_cases": [
         {
+            "name": "test_convoy_can_push_event_to_app_with_one_endpoint",
+            "setup": [
+                "setup_group",
+                "setup_app",
+                "setup_endpoint"
+            ],
             "http_method": "POST",
             "endpoint": "/events?groupID={group_id}",
             "callback": {
@@ -119,6 +37,13 @@
             "response_body": true
         },
         {
+            "name": "test_convoy_can_push_event_to_app_with_two_endpoint",
+            "setup": [
+                "setup_group",
+                "setup_app",
+                "setup_endpoint",
+                "setup_endpoint"
+            ],
             "http_method": "POST",
             "endpoint": "/events?groupID={group_id}",
             "callback": {
@@ -127,7 +52,7 @@
             },
             "request_body": {
                 "app_id": "{app_id}",
-                "event_type": "payment.success",
+                "event_type": "payment.failed",
                 "data": {
                     "sc": "gene",
                     "marvel": "stark"

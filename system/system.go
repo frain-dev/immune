@@ -15,6 +15,8 @@ import (
 // System represents the entire suite to be run against an API
 type System struct {
 	BaseURL        string                       `json:"base_url"`
+	EventTargetURL string                       `json:"event_target_url"`
+	Database       immune.Database              `json:"database"`
 	Callback       immune.CallbackConfiguration `json:"callback"`
 	Variables      *immune.VariableMap          `json:"-"`
 	SetupTestCases []immune.SetupTestCase       `json:"setup_test_cases"`
@@ -57,70 +59,36 @@ func (s *System) Clean() error {
 		s.Callback.MaxWaitSeconds = maxCallbackWait
 	}
 
-	varNameToSetupTC := map[string]int{}
-
-	for i := range s.SetupTestCases {
-		tc := &s.SetupTestCases[i]
-		tcNum := i + 1
-
-		if tc.StatusCode < 100 || tc.StatusCode > 511 {
-			return fmt.Errorf("setup_test_case %d: valid range for status_code is 100-511", tcNum)
-		}
-
-		// ensure no variable name is used twice
-		for name := range tc.StoreResponseVariables {
-			ix, ok := varNameToSetupTC[name]
-			if ok {
-				return fmt.Errorf("setup_test_case %d: variable name %s already used in setup_test_case %d", tcNum, name, ix)
-			}
-
-			varNameToSetupTC[name] = tcNum
-		}
-
-		if len(tc.Endpoint) == 0 {
-			return fmt.Errorf("setup_test_case %d: endpoint cannot be empty", tcNum)
-		}
-
-		if !strings.HasPrefix(tc.Endpoint, "/") {
-			return fmt.Errorf("setup_test_case %d: endpoint must begin with /", tcNum)
-		}
-
-		if !tc.HTTPMethod.IsValid() {
-			return fmt.Errorf("setup_test_case %d: invalid method: %s", tcNum, tc.HTTPMethod.String())
-		}
-
-		s.SetupTestCases[i].Position = tcNum
-	}
-
 	for i := range s.TestCases {
 		tc := &s.TestCases[i]
-		tcNum := i + 1
+
+		if tc.Name == "" {
+			return errors.New("test case name cannot be empty")
+		}
 
 		if len(tc.Endpoint) == 0 {
-			return fmt.Errorf("test_case %d: endpoint cannot be empty", tcNum)
+			return fmt.Errorf("test_case %s: endpoint cannot be empty", tc.Name)
 		}
 
 		if tc.StatusCode < 100 || tc.StatusCode > 511 {
-			return fmt.Errorf("setup_test_case %d: valid range for status_code is 100-511", tcNum)
+			return fmt.Errorf("test_case %s: valid range for status_code is 100-511", tc.Name)
 		}
 
 		if !strings.HasPrefix(tc.Endpoint, "/") {
-			return fmt.Errorf("test_case %d: endpoint must begin with /", tcNum)
+			return fmt.Errorf("test_case %s: endpoint must begin with /", tc.Name)
 		}
 
 		if !tc.HTTPMethod.IsValid() {
-			return fmt.Errorf("test_case %d: invalid method: %s", tcNum, tc.HTTPMethod.String())
+			return fmt.Errorf("test_case %s: invalid method: %s", tc.Name, tc.HTTPMethod.String())
 		}
 
 		if tc.Callback.Enabled {
 			s.needsCallback = true
 
 			if tc.Callback.Times == 0 {
-				return fmt.Errorf("test_case %d: if callback is enabled then times must be greater than 0", tcNum)
+				return fmt.Errorf("test_case %s: if callback is enabled then times must be greater than 0", tc.Name)
 			}
 		}
-
-		s.TestCases[i].Position = tcNum
 	}
 
 	return nil

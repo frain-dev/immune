@@ -10,6 +10,10 @@ type VariableMap struct {
 	VariableToValue M
 }
 
+func NewVariableMap() *VariableMap {
+	return &VariableMap{VariableToValue: M{}}
+}
+
 // GetString gets the value of key from the variable map, if the value
 // isn't of the string type, it will be converted to string via fmt.Sprintf
 // and returned

@@ -5,9 +5,11 @@ import (
 	"net/http"
 
 	"github.com/frain-dev/immune"
-
 	"github.com/frain-dev/immune/callback"
+	"github.com/frain-dev/immune/database"
 	"github.com/frain-dev/immune/exec"
+	"github.com/frain-dev/immune/funcs"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -32,25 +34,54 @@ func (s *System) Run(ctx context.Context) error {
 		defer cs.Stop()
 	}
 
-	ex := exec.NewExecutor(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation)
-
-	log.Info("starting execution of setup test cases")
-
-	for i := range s.SetupTestCases {
-		err = ex.ExecuteSetupTestCase(ctx, &s.SetupTestCases[i])
-		if err != nil {
-			return err
-		}
+	truncator, err := database.NewTruncator(&s.Database)
+	if err != nil {
+		return err
 	}
 
-	log.Info("finished execution of setup test cases")
-	log.Info("starting execution of test cases")
+	idFn := func() string {
+		return uuid.New().String()
+	}
+	ex := exec.NewExecutor(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation, truncator, idFn)
 
+	//log.Info("starting execution of setup test cases")
+	//for i := range s.SetupTestCases {
+	//	err = ex.ExecuteSetupTestCase(ctx, &s.SetupTestCases[i])
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//log.Info("finished execution of setup test cases")
+
+	log.Info("starting execution of test cases")
 	for i := range s.TestCases {
-		err = ex.ExecuteTestCase(ctx, &s.TestCases[i])
+		tc := &s.TestCases[i]
+		for _, setupName := range tc.Setup {
+			switch setupName {
+			case "setup_group":
+				err = funcs.SetupGroup(ctx, ex)
+				if err != nil {
+					return err
+				}
+			case "setup_app":
+				err = funcs.SetupApp(ctx, ex)
+				if err != nil {
+					return err
+				}
+			case "setup_endpoint":
+				err = funcs.SetupAppEndpoint(ctx, s.EventTargetURL, ex)
+				if err != nil {
+					return err
+				}
+			default:
+				return errors.Errorf("unknown setup %s, in test case %s", setupName, tc.Name)
+			}
+		}
+		err = ex.ExecuteTestCase(ctx, tc)
 		if err != nil {
 			return err
 		}
+		log.Infof("test_case %s passed", tc.Name)
 	}
 
 	log.Info("finished execution of test cases")

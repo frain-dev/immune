@@ -3,9 +3,8 @@ package exec
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/frain-dev/immune"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_request_processWithVariableMap(t *testing.T) {
@@ -32,6 +31,7 @@ func Test_request_processWithVariableMap(t *testing.T) {
 				"data": map[string]interface{}{
 					"name":  "daniel",
 					"phone": "{phone}",
+					"ref":   "{}",
 					"email": "dan@gmail.com",
 					"user": map[string]interface{}{
 						"group_name": "{group_name}",
@@ -52,6 +52,7 @@ func Test_request_processWithVariableMap(t *testing.T) {
 				"data": map[string]interface{}{
 					"name":  "daniel",
 					"phone": 90324242,
+					"ref":   "{}",
 					"email": "dan@gmail.com",
 					"user": map[string]interface{}{
 						"group_name": "red_house",

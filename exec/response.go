@@ -7,6 +7,7 @@ import (
 
 type response struct {
 	statusCode int
+	buf        []byte
 	body       *bytes.Buffer
 }
 
