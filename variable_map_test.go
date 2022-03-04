@@ -92,7 +92,7 @@ func TestVariableMap_ProcessResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v := &VariableMap{VariableToValue: M{}}
+			v := NewVariableMap()
 
 			err := v.ProcessResponse(tt.args.ctx, tt.args.variableToField, tt.args.values)
 			if tt.wantErr {

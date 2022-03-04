@@ -26,7 +26,7 @@ func Parse(s string) (*URL, error) {
 
 	// keep a set of encountered variables, since they will be all
 	// replaced by the same value when ProcessWithVariableMap is called,
-	// it makes sense to record just one instance if it
+	// it makes sense to record just one instance of it
 	set := map[string]bool{}
 	for {
 		v := nextVariable(s)

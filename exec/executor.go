@@ -152,18 +152,18 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 
 	if tc.ResponseBody {
 		if resp.body.Len() == 0 {
-			return errors.Errorf("test_case %s: wants response body but got no response body: %+v", tc.Name, resp)
+			return errors.Errorf("test_case %s: wants response body but got no response body: status_code: %d", tc.Name, resp.statusCode)
 		}
 
 		m := immune.M{}
 		err = resp.Decode(&m)
 		if err != nil {
-			return errors.Errorf("test_case %s: failed to decode response body: %+v", tc.Name, resp)
+			return errors.Wrapf(err, "test_case %s: failed to decode response body: %s", tc.Name, string(resp.buf))
 		}
 
 	} else {
 		if resp.body.Len() > 0 {
-			return errors.Wrapf(err, "test_case %s: does not want a response body but got a response body: '%s'", tc.Name, resp.body.String())
+			return errors.Errorf("test_case %s: does not want a response body but got a response body: '%s'", tc.Name, resp.body.String())
 		}
 	}
 
@@ -213,5 +213,5 @@ func (ex *Executor) sendRequest(ctx context.Context, r *request) (*response, err
 		return nil, err
 	}
 
-	return &response{body: bytes.NewBuffer(buf), statusCode: resp.StatusCode}, nil
+	return &response{body: bytes.NewBuffer(buf), buf: buf, statusCode: resp.StatusCode}, nil
 }
