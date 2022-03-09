@@ -9,13 +9,14 @@ import (
 	"strings"
 
 	"github.com/frain-dev/immune"
+	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 )
 
 // System represents the entire suite to be run against an API
 type System struct {
 	BaseURL        string                       `json:"base_url"`
-	EventTargetURL string                       `json:"event_target_url"`
+	EventTargetURL string                       `json:"event_target_url" envconfig:"IMMUNE_EVENT_TARGET_URL"`
 	Database       immune.Database              `json:"database"`
 	Callback       immune.CallbackConfiguration `json:"callback"`
 	Variables      *immune.VariableMap          `json:"-"`
@@ -37,8 +38,22 @@ func NewSystem(filePath string) (*System, error) {
 		return nil, err
 	}
 
+	envOverride := &System{}
+	err = envconfig.Process("IMMUNE", envOverride)
+	if err != nil {
+		return nil, err
+	}
+
+	processOverride(sys, envOverride)
+
 	sys.Variables = &immune.VariableMap{VariableToValue: immune.M{}}
 	return sys, nil
+}
+
+func processOverride(sys, override *System) {
+	if override.EventTargetURL != "" {
+		sys.EventTargetURL = override.EventTargetURL
+	}
 }
 
 const maxCallbackWait = 5
