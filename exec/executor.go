@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -208,7 +208,7 @@ func (ex *Executor) sendRequest(ctx context.Context, r *request) (*response, err
 	}
 	defer resp.Body.Close()
 
-	buf, err := io.ReadAll(resp.Body)
+	buf, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
