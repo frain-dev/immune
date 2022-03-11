@@ -10,6 +10,9 @@ type CallbackConfiguration struct {
 	MaxWaitSeconds uint   `json:"max_wait_seconds"`
 	Port           uint   `json:"port"`
 	Route          string `json:"route"`
+	SSL            bool   `json:"ssl" envconfig:"IMMUNE_SSL"`
+	SSLKeyFile     string `json:"ssl_key_file" envconfig:"IMMUNE_SSL_KEY_FILE"`
+	SSLCertFile    string `json:"ssl_cert_file" envconfig:"IMMUNE_SSL_CERT_FILE"`
 	IDLocation     string `json:"id_location"`
 }
 

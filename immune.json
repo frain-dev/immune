@@ -2,6 +2,9 @@
     "base_url": "http://127.0.0.1:5005/api/v1",
     "callback": {
         "port": 80,
+        "ssl": false,
+        "ssl_cert_file": "",
+        "ssl_key_file": "",
         "max_wait_seconds": 20,
         "route": "/",
         "id_location": "data"

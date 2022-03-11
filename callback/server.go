@@ -27,6 +27,10 @@ type server struct {
 
 	// the callback http server
 	s *http.Server
+
+	withSSL     bool
+	sslKeyFile  string
+	sslCertFile string
 }
 
 // NewServer instantiates a new callback server
@@ -41,17 +45,33 @@ func NewServer(cfg *immune.CallbackConfiguration) (immune.CallbackServer, error)
 		Handler: mux,
 	}
 
-	return &server{
+	s := &server{
 		stop:     make(chan struct{}),
 		outbound: outbound,
 		s:        srv,
-	}, nil
+	}
+
+	if cfg.SSL {
+		s.withSSL = true
+		s.sslKeyFile = cfg.SSLKeyFile
+		s.sslCertFile = cfg.SSLCertFile
+	}
+
+	return s, nil
 }
 
 // Start starts the callback http server
 func (s *server) Start(ctx context.Context) error {
 	go func() {
-		err := s.s.ListenAndServe()
+		var err error
+
+		if s.withSSL {
+			log.Infof("Started callback server with SSL: cert_file: %s, key_file: %s", s.sslCertFile, s.sslKeyFile)
+			err = s.s.ListenAndServeTLS(s.sslCertFile, s.sslKeyFile)
+		} else {
+			err = s.s.ListenAndServe()
+		}
+
 		if err != nil && err != http.ErrServerClosed {
 			log.WithError(err).Fatal("callback server failed to start")
 		}
@@ -66,7 +86,7 @@ func (s *server) Start(ctx context.Context) error {
 			s.gracefulShutdown()
 		}
 	}()
-
+	time.Sleep(time.Second) // allow for the server to start
 	return nil
 }
 

@@ -174,7 +174,7 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 		for i := uint(1); i <= tc.Callback.Times; i++ {
 			select {
 			case <-cctx.Done():
-				log.Infof("succesfully received %d callbacks for test_case %s before max callback wait seconds elapsed", i, tc.Name)
+				log.Infof("succesfully received %d callbacks for test_case %s before max callback wait seconds elapsed", i-1, tc.Name)
 				break
 			default:
 				sig := ex.s.ReceiveCallback()
