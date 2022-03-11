@@ -199,7 +199,7 @@ func (ex *Executor) sendRequest(ctx context.Context, r *request) (*response, err
 	if err != nil {
 		return nil, err
 	}
-	req.Close = true
+
 	req.Header.Add("Content-Type", r.contentType)
 
 	resp, err := ex.client.Do(req)
