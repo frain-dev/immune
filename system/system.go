@@ -54,6 +54,18 @@ func processOverride(sys, override *System) {
 	if override.EventTargetURL != "" {
 		sys.EventTargetURL = override.EventTargetURL
 	}
+
+	if _, ok := os.LookupEnv("IMMUNE_SSL"); ok {
+		sys.Callback.SSL = override.Callback.SSL
+	}
+
+	if override.Callback.SSLKeyFile != "" {
+		sys.Callback.SSLKeyFile = override.Callback.SSLKeyFile
+	}
+
+	if override.Callback.SSLCertFile != "" {
+		sys.Callback.SSLCertFile = override.Callback.SSLCertFile
+	}
 }
 
 const maxCallbackWait = 5
@@ -62,6 +74,12 @@ const maxCallbackWait = 5
 func (s *System) Clean() error {
 	if s.BaseURL == "" {
 		return errors.New("base url cannot be empty")
+	}
+
+	if s.Callback.SSL {
+		if s.Callback.SSLCertFile == "" || s.Callback.SSLKeyFile == "" {
+			return errors.New("both cert_file and key_file are required for ssl")
+		}
 	}
 
 	_, err := url.Parse(s.BaseURL)
