@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"github.com/frain-dev/immune"
 	"github.com/frain-dev/immune/exec"
 )
@@ -114,6 +116,35 @@ func SetupAppEndpoint(ctx context.Context, targetURL string, ex *exec.Executor) 
 		Endpoint:     "/applications/{app_id}/endpoints?groupID={group_id}",
 		HTTPMethod:   "POST",
 		StatusCode:   201,
+	}
+
+	return ex.ExecuteSetupTestCase(ctx, tc)
+}
+
+func SetupEvent(ctx context.Context, ex *exec.Executor) error {
+	req := `{
+                "app_id": "{app_id}",
+                "event_type": "%s",
+                "data": {
+                    "sc": "gene",
+                    "marvel": "stark"
+                }
+            }`
+
+	req = fmt.Sprintf(req, uuid.New().String())
+	mapper := map[string]interface{}{}
+	err := json.Unmarshal([]byte(req), &mapper)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request body: %v", err)
+	}
+
+	tc := &immune.SetupTestCase{
+		Name:         "setup_event",
+		RequestBody:  mapper,
+		ResponseBody: true,
+		Endpoint:     "/events?groupID={group_id}",
+		HTTPMethod:   "POST",
+		StatusCode:   200,
 	}
 
 	return ex.ExecuteSetupTestCase(ctx, tc)
