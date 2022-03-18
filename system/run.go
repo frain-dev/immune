@@ -73,6 +73,11 @@ func (s *System) Run(ctx context.Context) error {
 				if err != nil {
 					return err
 				}
+			case "setup_event":
+				err = funcs.SetupEvent(ctx, ex)
+				if err != nil {
+					return err
+				}
 			default:
 				return errors.Errorf("unknown setup %s, in test case %s", setupName, tc.Name)
 			}
