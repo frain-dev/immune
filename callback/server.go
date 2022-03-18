@@ -122,7 +122,7 @@ func (s *server) gracefulShutdown() {
 	log.Infof("callback server shutdown gracefully")
 }
 
-// ReceiveCallback receives a Signal from the callback channel
+// ReceiveCallback sends a Signal to rc
 func (s *server) ReceiveCallback(rc chan<- *immune.Signal) {
 	rc <- <-s.outbound
 }
