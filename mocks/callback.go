@@ -36,17 +36,15 @@ func (m *MockCallbackServer) EXPECT() *MockCallbackServerMockRecorder {
 }
 
 // ReceiveCallback mocks base method.
-func (m *MockCallbackServer) ReceiveCallback() *immune.Signal {
+func (m *MockCallbackServer) ReceiveCallback(rc chan<- *immune.Signal) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReceiveCallback")
-	ret0, _ := ret[0].(*immune.Signal)
-	return ret0
+	m.ctrl.Call(m, "ReceiveCallback", rc)
 }
 
 // ReceiveCallback indicates an expected call of ReceiveCallback.
-func (mr *MockCallbackServerMockRecorder) ReceiveCallback() *gomock.Call {
+func (mr *MockCallbackServerMockRecorder) ReceiveCallback(rc interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveCallback", reflect.TypeOf((*MockCallbackServer)(nil).ReceiveCallback))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveCallback", reflect.TypeOf((*MockCallbackServer)(nil).ReceiveCallback), rc)
 }
 
 // Start mocks base method.

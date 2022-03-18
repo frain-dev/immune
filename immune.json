@@ -11,16 +11,17 @@
     },
     "database" : {
         "type": "mongo",
-        "dsn": "mongodb+srv://admin:6ac23875-24ce-512e-b5f6-c6e837373debfrC7pZUxZiymogxV@cluster1.eqj2e.mongodb.net/convoy-prod-db-immune?retryWrites=true&w=majority"
+        "dsn": "mongodb+srv://admin:7h5tAfZiYuCEe6KC42873272642331@cluster1.eqj2e.mongodb.net/convoy-immune"
     },
-    "event_target_url": "https://c25b-102-219-153-90.eu.ngrok.io",
+    "event_target_url": "https://5721-102-219-153-96.ngrok.io",
     "test_cases": [
         {
             "name": "test_convoy_can_push_event_to_app_with_one_endpoint",
             "setup": [
                 "setup_group",
                 "setup_app",
-                "setup_endpoint"
+                "setup_endpoint",
+                "setup_event"
             ],
             "http_method": "POST",
             "endpoint": "/events?groupID={group_id}",

@@ -34,6 +34,7 @@ func InjectCallbackID(field string, value interface{}, r M) error {
 			return fmt.Errorf("the field %s, is not an object in the request body", field)
 		}
 		m[CallbackIDFieldName] = value
+		return nil
 	}
 
 	nextLevel, err := getM(r, parts)
@@ -47,7 +48,7 @@ func InjectCallbackID(field string, value interface{}, r M) error {
 }
 
 type CallbackServer interface {
-	ReceiveCallback() *Signal
+	ReceiveCallback(rc chan<- *Signal)
 	Start(ctx context.Context) error
 	Stop()
 }
