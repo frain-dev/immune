@@ -370,7 +370,11 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 				return "12345"
 			},
 			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
-				server.EXPECT().ReceiveCallback().Return(&immune.Signal{ImmuneCallBackID: "12345"}).Times(2)
+				var rc chan<- *immune.Signal
+				server.EXPECT().ReceiveCallback(gomock.AssignableToTypeOf(rc)).Times(2).DoAndReturn(func(c chan<- *immune.Signal) {
+					c <- &immune.Signal{ImmuneCallBackID: "12345"}
+				})
+
 				tr.EXPECT().Truncate(gomock.Any()).Times(1)
 				httpmock.Activate()
 
@@ -730,7 +734,10 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 				return "12345"
 			},
 			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
-				server.EXPECT().ReceiveCallback().Return(&immune.Signal{ImmuneCallBackID: "1234"}).Times(1)
+				var rc chan<- *immune.Signal
+				server.EXPECT().ReceiveCallback(gomock.AssignableToTypeOf(rc)).Times(1).Do(func(rc chan<- *immune.Signal) {
+					rc <- &immune.Signal{ImmuneCallBackID: "1234"}
+				})
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user",

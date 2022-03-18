@@ -171,13 +171,16 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 		cctx, cancel := context.WithTimeout(context.Background(), time.Duration(ex.maxCallbackWaitSeconds)*time.Second)
 		defer cancel()
 
+		rc := make(chan *immune.Signal, 1)
+
 		for i := uint(1); i <= tc.Callback.Times; i++ {
+			ex.s.ReceiveCallback(rc)
+
 			select {
 			case <-cctx.Done():
 				log.Infof("succesfully received %d callbacks for test_case %s before max callback wait seconds elapsed", i-1, tc.Name)
 				break
-			default:
-				sig := ex.s.ReceiveCallback()
+			case sig := <-rc:
 				if sig.ImmuneCallBackID != uid {
 					return errors.Errorf("test_case %s: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Name, uid, sig.ImmuneCallBackID)
 				}

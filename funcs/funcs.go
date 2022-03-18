@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/google/uuid"
-
 	"github.com/frain-dev/immune"
 	"github.com/frain-dev/immune/exec"
+	"github.com/google/uuid"
 )
 
 var (
