@@ -122,6 +122,7 @@ func SetupAppEndpoint(ctx context.Context, targetURL string, ex *exec.Executor) 
 }
 
 func SetupEvent(ctx context.Context, ex *exec.Executor) error {
+	// uses a random event type so convoy will discard the event
 	req := `{
                 "app_id": "{app_id}",
                 "event_type": "%s",
@@ -144,7 +145,7 @@ func SetupEvent(ctx context.Context, ex *exec.Executor) error {
 		ResponseBody: true,
 		Endpoint:     "/events?groupID={group_id}",
 		HTTPMethod:   "POST",
-		StatusCode:   200,
+		StatusCode:   201,
 	}
 
 	return ex.ExecuteSetupTestCase(ctx, tc)
