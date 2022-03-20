@@ -32,6 +32,16 @@ func Test_request_processWithVariableMap(t *testing.T) {
 					"name":  "daniel",
 					"phone": "{phone}",
 					"ref":   "{}",
+					"groups": []interface{}{
+						123,
+						map[string]interface{}{
+							"ref": 123,
+						},
+						"abc",
+						"{group_id}",
+						"{group_name}",
+						"{group_id}",
+					},
 					"email": "dan@gmail.com",
 					"user": map[string]interface{}{
 						"group_name": "{group_name}",
@@ -54,7 +64,16 @@ func Test_request_processWithVariableMap(t *testing.T) {
 					"phone": 90324242,
 					"ref":   "{}",
 					"email": "dan@gmail.com",
-					"user": map[string]interface{}{
+					"groups": []interface{}{
+						123,
+						map[string]interface{}{
+							"ref": 123,
+						},
+						"abc",
+						"123-454-655",
+						"red_house",
+						"123-454-655",
+					}, "user": map[string]interface{}{
 						"group_name": "red_house",
 						"group_id":   "123-454-655",
 					},
@@ -62,7 +81,49 @@ func Test_request_processWithVariableMap(t *testing.T) {
 			},
 		},
 		{
-			name: "should_process_request_body",
+			name: "should_error_for_group_name_variable_not_exist",
+			body: immune.M{
+				"data": map[string]interface{}{
+					"name": "daniel",
+					"ref":  "{}",
+					"groups": []interface{}{
+						"{group_name}",
+					},
+					"email": "dan@gmail.com",
+				},
+			},
+			args: args{
+				vm: &immune.VariableMap{
+					VariableToValue: immune.M{},
+				},
+			},
+			wantErr:    true,
+			wantErrMsg: "variable group_name does not exist in variable map",
+		},
+		{
+			name: "should_error_for_phone_variable_not_exist",
+			body: immune.M{
+				"data": map[string]interface{}{
+					"name": "daniel",
+					"ref":  "{}",
+					"groups": []interface{}{
+						map[string]interface{}{
+							"phone": "{phone}",
+						},
+					},
+					"email": "dan@gmail.com",
+				},
+			},
+			args: args{
+				vm: &immune.VariableMap{
+					VariableToValue: immune.M{},
+				},
+			},
+			wantErr:    true,
+			wantErrMsg: "variable phone does not exist in variable map",
+		},
+		{
+			name: "should_error_for_status_variable_not_exists",
 			body: immune.M{
 				"data": map[string]interface{}{
 					"name":  "daniel",

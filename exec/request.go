@@ -45,16 +45,24 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 			}
 		case []interface{}:
 			for i, sliceValue := range value {
-				s, ok := sliceValue.(string)
-				if !ok {
+				var val interface{}
+				var err error
+
+				switch s := sliceValue.(type) {
+				case string:
+					val, err = getVariableValue(s, vm)
+					if err != nil {
+						return err
+					}
+					value[i] = val
+				case map[string]interface{}:
+					// recursively traverse values with the type map[string]interface{}
+					err := r.traverse(s, vm)
+					if err != nil {
+						return err
+					}
 					continue
 				}
-
-				val, err := getVariableValue(s, vm)
-				if err != nil {
-					return err
-				}
-				value[i] = val
 			}
 		}
 	}
