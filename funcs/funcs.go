@@ -139,7 +139,10 @@ func SetupEvent(ctx context.Context, ex *exec.Executor) error {
 	}
 
 	tc := &immune.SetupTestCase{
-		Name:         "setup_event",
+		Name: "setup_event",
+		StoreResponseVariables: immune.S{
+			"event_id": "data.uid",
+		},
 		RequestBody:  mapper,
 		ResponseBody: true,
 		Endpoint:     "/events?groupID={group_id}",
