@@ -258,7 +258,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					httpmock.DeactivateAndReset()
 				}
 			},
-			wantErrMsg: "setup_test_case abc: failed to process response body: response body: : field user_id does not exist",
+			wantErrMsg: "setup_test_case abc: failed to process response body: response body: : field user_id: not found",
 			wantErr:    true,
 		},
 		{

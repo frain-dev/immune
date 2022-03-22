@@ -86,7 +86,7 @@ func TestVariableMap_ProcessResponse(t *testing.T) {
 				},
 			},
 			wantVariableMap: M{},
-			wantErrMsg:      "field data.uid does not exist",
+			wantErrMsg:      "field data.uid: not found",
 			wantErr:         true,
 		},
 	}
@@ -287,7 +287,7 @@ func Test_getM(t *testing.T) {
 				parts: []string{"data", "ref", "status"},
 			},
 			want:       nil,
-			wantErrMsg: "the field data.ref.status, does not exist",
+			wantErrMsg: "field data.ref.status: not found",
 			wantErr:    true,
 		},
 		{
@@ -303,7 +303,7 @@ func Test_getM(t *testing.T) {
 				parts: []string{"data", "ref", "status"},
 			},
 			want:       nil,
-			wantErrMsg: "the field data.ref.status, is not an object in the given map",
+			wantErrMsg: "field data.ref.status: required type is object but got int",
 			wantErr:    true,
 		},
 	}
@@ -312,7 +312,7 @@ func Test_getM(t *testing.T) {
 			got, err := getM(tt.args.m, tt.args.parts)
 			if tt.wantErr {
 				require.Error(t, err)
-				require.Equal(t, err.Error(), tt.wantErrMsg)
+				require.Equal(t, tt.wantErrMsg, err.Error())
 				return
 			}
 
@@ -375,7 +375,7 @@ func Test_getKeyInMap(t *testing.T) {
 					"message": "fetched app",
 				},
 			},
-			wantErrMsg: "field data does not exist",
+			wantErrMsg: "field data: not found",
 			wantErr:    true,
 		},
 		{
@@ -388,7 +388,7 @@ func Test_getKeyInMap(t *testing.T) {
 					"data":    map[string]interface{}{},
 				},
 			},
-			wantErrMsg: "field data.uid does not exist",
+			wantErrMsg: "field data.uid: not found",
 			wantErr:    true,
 		},
 		{
@@ -401,7 +401,7 @@ func Test_getKeyInMap(t *testing.T) {
 					"data":    map[string]interface{}{},
 				},
 			},
-			wantErrMsg: "the field data.ref, does not exist",
+			wantErrMsg: "field data.ref: not found",
 			wantErr:    true,
 		},
 	}
