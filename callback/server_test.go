@@ -52,7 +52,9 @@ func Test_handleCallback(t *testing.T) {
 			require.Equal(t, http.StatusOK, recorder.Code)
 
 			if tt.wantErr {
-				require.Equal(t, tt.wantErrMsg, (<-tt.args.outbound).Error())
+				s := <-tt.args.outbound
+				require.Empty(t, s.ImmuneCallBackID)
+				require.Equal(t, tt.wantErrMsg, s.Error())
 				return
 			}
 			require.Equal(t, tt.wantSignal, <-tt.args.outbound)
