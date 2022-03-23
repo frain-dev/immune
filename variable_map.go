@@ -146,7 +146,11 @@ func getArrayValue(v string, m M) (interface{}, error) {
 	ixStr := v[open+1 : closer]
 	ix, err := strconv.Atoi(ixStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert index notation")
+		return nil, fmt.Errorf("invalid index notation: %s", ixStr)
+	}
+
+	if ix < 0 {
+		return nil, fmt.Errorf("invalid index range: %d", ix)
 	}
 
 	name := v[:open]
