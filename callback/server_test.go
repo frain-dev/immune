@@ -19,6 +19,8 @@ func Test_handleCallback(t *testing.T) {
 		args       args
 		request    *http.Request
 		wantSignal *immune.Signal
+		wantErr    bool
+		wantErrMsg string
 	}{
 		{
 			name: "should_receive_signal",
@@ -30,6 +32,15 @@ func Test_handleCallback(t *testing.T) {
 				ImmuneCallBackID: "123-4242-13429-4221",
 			},
 		},
+		{
+			name: "should_receive_error_signal",
+			args: args{
+				outbound: make(chan *immune.Signal, 1),
+			},
+			request:    httptest.NewRequest(http.MethodGet, "/", strings.NewReader(`"immune_callback_id"`)),
+			wantErr:    true,
+			wantErrMsg: "failed to decode callback body: json: cannot unmarshal string into Go value of type immune.Signal",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -39,6 +50,11 @@ func Test_handleCallback(t *testing.T) {
 			handleFunc(recorder, tt.request)
 
 			require.Equal(t, http.StatusOK, recorder.Code)
+
+			if tt.wantErr {
+				require.Equal(t, tt.wantErrMsg, (<-tt.args.outbound).Error())
+				return
+			}
 			require.Equal(t, tt.wantSignal, <-tt.args.outbound)
 		})
 	}
