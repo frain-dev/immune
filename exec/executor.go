@@ -181,10 +181,6 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 				log.Infof("succesfully received %d callbacks for test_case %s before max callback wait seconds elapsed", i-1, tc.Name)
 				break
 			case sig := <-signalChan:
-				if sig.HasError() {
-					return errors.Errorf("test_case %s: callback error: %s", tc.Name, sig.Error())
-				}
-
 				if sig.ImmuneCallBackID != uid {
 					return errors.Errorf("test_case %s: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Name, uid, sig.ImmuneCallBackID)
 				}

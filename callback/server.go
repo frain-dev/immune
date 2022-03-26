@@ -3,12 +3,12 @@ package callback
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/frain-dev/immune"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -97,7 +97,8 @@ func handleCallback(outbound chan<- *immune.Signal) http.HandlerFunc {
 		sig := &immune.Signal{}
 		err := json.NewDecoder(r.Body).Decode(sig)
 		if err != nil {
-			sig.Err = fmt.Errorf("failed to decode callback body: %v", err)
+			log.WithError(err).Error("failed to decode callback body")
+			return
 		}
 		w.WriteHeader(http.StatusOK)
 		outbound <- sig
