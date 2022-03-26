@@ -2,7 +2,9 @@ package immune
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -68,9 +70,17 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 	// we may have separators referencing deeper fields in the response body e.g data.uid
 	parts := strings.Split(field, ".")
 	if len(parts) < 2 { // if it's less than 2, then there is no '.' in field
-		value, ok = resp[field]
-		if !ok {
-			return nil, fmt.Errorf("field %s does not exist", field)
+		if isArray(field) {
+			var err error
+			value, err = getArrayValue(field, resp)
+			if err != nil {
+				return nil, fmt.Errorf("field %s: %v", field, err)
+			}
+		} else {
+			value, ok = resp[field]
+			if !ok {
+				return nil, fmt.Errorf("field %s: not found", field)
+			}
 		}
 	} else {
 		lastPart := parts[len(parts)-1]
@@ -83,7 +93,7 @@ func getKeyInMap(field string, resp M) (interface{}, error) {
 
 		value, ok = nextLevel[lastPart] // we have reached the last part of the "data.uid"
 		if !ok {
-			return nil, fmt.Errorf("field %s does not exist", field)
+			return nil, fmt.Errorf("field %s: not found", field)
 		}
 	}
 
@@ -99,18 +109,64 @@ func getM(m M, parts []string) (M, error) {
 
 	track := ""
 	for _, part := range parts {
-		v, ok = nextLevel[part]
-		if !ok {
-			return nil, fmt.Errorf("the field %s, does not exist", track+part) // avoid printing the trailing dot
+		if isArray(part) {
+			var err error
+			v, err = getArrayValue(part, nextLevel)
+			if err != nil {
+				return nil, fmt.Errorf("field %s: %v", track+part, err)
+			}
+		} else {
+			v, ok = nextLevel[part]
+			if !ok {
+				return nil, fmt.Errorf("field %s: not found", track+part)
+			}
 		}
 
 		nextLevel, ok = v.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("the field %s, is not an object in the given map", track+part)
+			return nil, fmt.Errorf("field %s: required type is object but got %T", track+part, v)
 		}
 
 		track += part + "."
 	}
 
 	return nextLevel, nil
+}
+
+func isArray(v string) bool {
+	return strings.Contains(v, "[") && strings.HasSuffix(v, "]")
+}
+
+// getArrayValue parses a variable reference and returns the value in m
+// v is expected to be of format field[index] e.g. tunnels[0]
+func getArrayValue(v string, m M) (interface{}, error) {
+	open := strings.Index(v, "[")
+	closer := strings.Index(v, "]")
+
+	ixStr := v[open+1 : closer]
+	ix, err := strconv.Atoi(ixStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid index notation: %s", ixStr)
+	}
+
+	if ix < 0 {
+		return nil, fmt.Errorf("invalid index range: %d", ix)
+	}
+
+	name := v[:open]
+	field, ok := m[name]
+	if !ok {
+		return nil, errors.New("not found")
+	}
+
+	sliceValue, ok := field.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("required type is an array but has type %T", field)
+	}
+
+	if len(sliceValue) < ix+1 {
+		return nil, fmt.Errorf("index out of range with length %d", len(sliceValue))
+	}
+
+	return sliceValue[ix], nil
 }

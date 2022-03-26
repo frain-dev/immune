@@ -30,22 +30,54 @@ func (r *request) traverse(m immune.M, vm *immune.VariableMap) error {
 				continue
 			}
 
-			if strings.HasPrefix(value, "{") && strings.HasSuffix(value, "}") {
-				varName := value[1 : len(value)-1]
-				value, exists := vm.Get(varName)
-				if !exists {
-					return errors.Errorf("variable %s does not exist in variable map", varName)
-				}
-
-				m[k] = value // replace m[k] with the variable value
+			val, err := getVariableValue(value, vm)
+			if err != nil {
+				return err
 			}
+
+			m[k] = val // replace m[k] with the variable value
+
 		case map[string]interface{}:
 			// recursively traverse values with the type map[string]interface{}
 			err := r.traverse(value, vm)
 			if err != nil {
 				return err
 			}
+		case []interface{}:
+			for i, sliceValue := range value {
+				var val interface{}
+				var err error
+
+				switch s := sliceValue.(type) {
+				case string:
+					val, err = getVariableValue(s, vm)
+					if err != nil {
+						return err
+					}
+					value[i] = val
+				case map[string]interface{}:
+					// recursively traverse values with the type map[string]interface{}
+					err := r.traverse(s, vm)
+					if err != nil {
+						return err
+					}
+					continue
+				}
+			}
 		}
 	}
 	return nil
+}
+
+func getVariableValue(str string, vm *immune.VariableMap) (interface{}, error) {
+	if strings.HasPrefix(str, "{") && strings.HasSuffix(str, "}") {
+		varName := str[1 : len(str)-1]
+		val, exists := vm.Get(varName)
+		if !exists {
+			return nil, errors.Errorf("variable %s does not exist in variable map", varName)
+		}
+		return val, nil
+	}
+
+	return str, nil // return original since, it's not a variable reference
 }
