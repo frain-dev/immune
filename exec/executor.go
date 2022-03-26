@@ -67,11 +67,12 @@ func (ex *Executor) ExecuteSetupTestCase(ctx context.Context, setupTC *immune.Se
 		method:      setupTC.HTTPMethod,
 	}
 
-	err = r.processWithVariableMap(ex.vm)
-	if err != nil {
-		return errors.Wrapf(err, "setup_test_case %s: failed to process request body with variable map", setupTC.Name)
+	if r.body != nil {
+		err = r.processWithVariableMap(ex.vm)
+		if err != nil {
+			return errors.Wrapf(err, "setup_test_case %s: failed to process request body with variable map", setupTC.Name)
+		}
 	}
-	//log.Infof("setup_test_case %s: request body: %s", setupTC.Name, pretty.Sprint(r.body))
 
 	resp, err := ex.sendRequest(ctx, r)
 	if err != nil {
@@ -136,9 +137,11 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 		method:      tc.HTTPMethod,
 	}
 
-	err = r.processWithVariableMap(ex.vm)
-	if err != nil {
-		return errors.Wrapf(err, "test_case %s: failed to process request body with variable map", tc.Name)
+	if r.body != nil {
+		err = r.processWithVariableMap(ex.vm)
+		if err != nil {
+			return errors.Wrapf(err, "test_case %s: failed to process request body with variable map", tc.Name)
+		}
 	}
 
 	resp, err := ex.sendRequest(ctx, r)
@@ -181,6 +184,10 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 				log.Infof("succesfully received %d callbacks for test_case %s before max callback wait seconds elapsed", i-1, tc.Name)
 				break
 			case sig := <-signalChan:
+				if sig.HasError() {
+					return errors.Errorf("test_case %s: callback error: %s", tc.Name, sig.Error())
+				}
+
 				if sig.ImmuneCallBackID != uid {
 					return errors.Errorf("test_case %s: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Name, uid, sig.ImmuneCallBackID)
 				}
@@ -193,12 +200,16 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 }
 
 func (ex *Executor) sendRequest(ctx context.Context, r *request) (*response, error) {
-	rb, err := json.Marshal(r.body)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal request body")
+	bb := &bytes.Buffer{}
+	if r.body != nil {
+		rb, err := json.Marshal(r.body)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to marshal request body")
+		}
+		bb.Write(rb)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, r.method.String(), r.url, bytes.NewBuffer(rb))
+	req, err := http.NewRequestWithContext(ctx, r.method.String(), r.url, bb)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package exec
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -47,6 +48,40 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 						"username": "daniel",
 						"email":    "daniel@gmail.com",
 						"phone":    113234294,
+					},
+					ResponseBody: true,
+					Endpoint:     "/create_user",
+					HTTPMethod:   "POST",
+					StatusCode:   http.StatusOK,
+				},
+			},
+			arrangeFn: func() func() {
+				httpmock.Activate()
+
+				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/create_user",
+					httpmock.NewStringResponder(http.StatusOK, `{"user_id":"1223-242-2322"}`))
+
+				return func() {
+					httpmock.DeactivateAndReset()
+				}
+			},
+			wantVariableMap: &immune.VariableMap{
+				VariableToValue: immune.M{"user_id": "1223-242-2322"},
+			},
+			wantErrMsg: "",
+			wantErr:    false,
+		},
+		{
+			name: "should_execute_setup_test_case_with_no_request_body",
+			fields: fields{
+				vm: immune.NewVariableMap(),
+			},
+			args: args{
+				ctx: context.Background(),
+				setupTC: &immune.SetupTestCase{
+					Name: "abc",
+					StoreResponseVariables: immune.S{
+						"user_id": "user_id",
 					},
 					ResponseBody: true,
 					Endpoint:     "/create_user",
@@ -258,7 +293,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					httpmock.DeactivateAndReset()
 				}
 			},
-			wantErrMsg: "setup_test_case abc: failed to process response body: response body: : field user_id does not exist",
+			wantErrMsg: "setup_test_case abc: failed to process response body: response body: : field user_id: not found",
 			wantErr:    true,
 		},
 		{
@@ -386,6 +421,93 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 				}
 			},
 			wantErr: false,
+		},
+		{
+			name: "should_execute_test_case_with_no_request_body",
+			fields: fields{
+				vm: &immune.VariableMap{
+					VariableToValue: immune.M{
+						"user_id":      "1234",
+						"company_name": "abc",
+					},
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				tc: &immune.TestCase{
+					Name:         "abc",
+					Setup:        nil,
+					StatusCode:   200,
+					HTTPMethod:   "POST",
+					Endpoint:     "/update_user/{user_id}",
+					ResponseBody: true,
+				},
+			},
+			idFn: func() string {
+				return "12345"
+			},
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+				tr.EXPECT().Truncate(gomock.Any()).Times(1)
+				httpmock.Activate()
+
+				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user/1234",
+					httpmock.NewStringResponder(http.StatusOK, `{"user":{"username":"daniel"}}`))
+
+				return func() {
+					httpmock.DeactivateAndReset()
+				}
+			},
+			wantErr: false,
+		},
+		{
+			name: "should_error_for_invalid_callback_body",
+			fields: fields{
+				vm: &immune.VariableMap{
+					VariableToValue: immune.M{
+						"company_name": "abc",
+					},
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				tc: &immune.TestCase{
+					Name:         "abc",
+					Setup:        nil,
+					StatusCode:   200,
+					HTTPMethod:   "POST",
+					Endpoint:     "/update",
+					ResponseBody: true,
+					Callback: immune.Callback{
+						Enabled: true,
+						Times:   2,
+					},
+					RequestBody: immune.M{
+						"email":        "dan@gmail.com",
+						"phone":        23453530833,
+						"data":         map[string]interface{}{},
+						"company_name": "{company_name}",
+					},
+				},
+			},
+			idFn: func() string {
+				return "12345"
+			},
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+				var rc chan<- *immune.Signal
+				server.EXPECT().ReceiveCallback(gomock.AssignableToTypeOf(rc)).Times(1).DoAndReturn(func(c chan<- *immune.Signal) {
+					c <- &immune.Signal{Err: errors.New("failed to decode callback body")}
+				})
+				httpmock.Activate()
+
+				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update",
+					httpmock.NewStringResponder(http.StatusOK, `{"user":{"username":"daniel"}}`))
+
+				return func() {
+					httpmock.DeactivateAndReset()
+				}
+			},
+			wantErr:    true,
+			wantErrMsg: "test_case abc: callback error: failed to decode callback body",
 		},
 		{
 			name: "should_error_for_url_variable_not_found_in_variable_map",
