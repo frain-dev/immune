@@ -39,6 +39,11 @@ func (s *System) Run(ctx context.Context) error {
 		return err
 	}
 
+	err = truncator.Truncate(ctx)
+	if err != nil {
+		return err
+	}
+
 	idFn := func() string {
 		return uuid.New().String()
 	}
