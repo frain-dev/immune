@@ -10,11 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	groupCount int
-	appCount   int
-)
-
 func SetupGroup(ctx context.Context, ex *exec.Executor) error {
 	req := `{
                 "config": {
@@ -32,11 +27,10 @@ func SetupGroup(ctx context.Context, ex *exec.Executor) error {
                     }
                 },
                 "logo_url": "",
-                "name": "immune-group-%d"
+                "name": "immune-group-%s"
             }`
 
-	groupCount++
-	req = fmt.Sprintf(req, groupCount)
+	req = fmt.Sprintf(req, uuid.New().String())
 	mapper := map[string]interface{}{}
 	err := json.Unmarshal([]byte(req), &mapper)
 	if err != nil {
@@ -60,12 +54,12 @@ func SetupGroup(ctx context.Context, ex *exec.Executor) error {
 
 func SetupApp(ctx context.Context, ex *exec.Executor) error {
 	const req = `{
-             "name": "retro-app-%d",
-			 "support_email": "retro_app-%d@gmail.com"
+             "name": "retro-app-%s",
+			 "support_email": "retro_app-%s@gmail.com"
             }`
 
-	appCount++
-	r := fmt.Sprintf(req, appCount, appCount)
+	uid := uuid.New().String()
+	r := fmt.Sprintf(req, uid, uid)
 
 	mapper := map[string]interface{}{}
 	err := json.Unmarshal([]byte(r), &mapper)
