@@ -2,7 +2,6 @@ package exec
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"testing"
 
@@ -259,7 +258,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 					httpmock.DeactivateAndReset()
 				}
 			},
-			wantErrMsg: "setup_test_case abc: failed to process response body: response body: : field user_id: not found",
+			wantErrMsg: "setup_test_case abc: failed to process response body: response body: : field user_id does not exist",
 			wantErr:    true,
 		},
 		{
@@ -387,56 +386,6 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 				}
 			},
 			wantErr: false,
-		},
-		{
-			name: "should_error_for_invalid_callback_body",
-			fields: fields{
-				vm: &immune.VariableMap{
-					VariableToValue: immune.M{
-						"company_name": "abc",
-					},
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				tc: &immune.TestCase{
-					Name:         "abc",
-					Setup:        nil,
-					StatusCode:   200,
-					HTTPMethod:   "POST",
-					Endpoint:     "/update",
-					ResponseBody: true,
-					Callback: immune.Callback{
-						Enabled: true,
-						Times:   2,
-					},
-					RequestBody: immune.M{
-						"email":        "dan@gmail.com",
-						"phone":        23453530833,
-						"data":         map[string]interface{}{},
-						"company_name": "{company_name}",
-					},
-				},
-			},
-			idFn: func() string {
-				return "12345"
-			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
-				var rc chan<- *immune.Signal
-				server.EXPECT().ReceiveCallback(gomock.AssignableToTypeOf(rc)).Times(1).DoAndReturn(func(c chan<- *immune.Signal) {
-					c <- &immune.Signal{Err: errors.New("failed to decode callback body")}
-				})
-				httpmock.Activate()
-
-				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update",
-					httpmock.NewStringResponder(http.StatusOK, `{"user":{"username":"daniel"}}`))
-
-				return func() {
-					httpmock.DeactivateAndReset()
-				}
-			},
-			wantErr:    true,
-			wantErrMsg: "test_case abc: callback error: failed to decode callback body",
 		},
 		{
 			name: "should_error_for_url_variable_not_found_in_variable_map",

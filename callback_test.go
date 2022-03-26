@@ -100,7 +100,7 @@ func TestInjectCallbackID(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			wantErrMsg: "field data.ref: not found",
+			wantErrMsg: "the field data.ref, does not exist",
 		},
 	}
 	for _, tt := range tests {

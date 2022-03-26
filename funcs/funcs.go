@@ -10,6 +10,11 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	groupCount int
+	appCount   int
+)
+
 func SetupGroup(ctx context.Context, ex *exec.Executor) error {
 	req := `{
                 "config": {
@@ -27,10 +32,11 @@ func SetupGroup(ctx context.Context, ex *exec.Executor) error {
                     }
                 },
                 "logo_url": "",
-                "name": "immune-group-%s"
+                "name": "immune-group-%d"
             }`
 
-	req = fmt.Sprintf(req, uuid.New().String())
+	groupCount++
+	req = fmt.Sprintf(req, groupCount)
 	mapper := map[string]interface{}{}
 	err := json.Unmarshal([]byte(req), &mapper)
 	if err != nil {
@@ -54,12 +60,12 @@ func SetupGroup(ctx context.Context, ex *exec.Executor) error {
 
 func SetupApp(ctx context.Context, ex *exec.Executor) error {
 	const req = `{
-             "name": "retro-app-%s",
-			 "support_email": "retro_app-%s@gmail.com"
+             "name": "retro-app-%d",
+			 "support_email": "retro_app-%d@gmail.com"
             }`
 
-	uid := uuid.New().String()
-	r := fmt.Sprintf(req, uid, uid)
+	appCount++
+	r := fmt.Sprintf(req, appCount, appCount)
 
 	mapper := map[string]interface{}{}
 	err := json.Unmarshal([]byte(r), &mapper)
@@ -133,10 +139,7 @@ func SetupEvent(ctx context.Context, ex *exec.Executor) error {
 	}
 
 	tc := &immune.SetupTestCase{
-		Name: "setup_event",
-		StoreResponseVariables: immune.S{
-			"event_id": "data.uid",
-		},
+		Name:         "setup_event",
 		RequestBody:  mapper,
 		ResponseBody: true,
 		Endpoint:     "/events?groupID={group_id}",

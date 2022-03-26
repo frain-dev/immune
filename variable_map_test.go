@@ -28,7 +28,6 @@ func TestVariableMap_ProcessResponse(t *testing.T) {
 					"num_events": "data.metadata.num_events",
 					"message":    "message",
 					"app_id":     "data.uid",
-					"app_name":   "data.apps[1].name",
 				},
 				values: M{
 					"status":  true,
@@ -38,10 +37,6 @@ func TestVariableMap_ProcessResponse(t *testing.T) {
 						"metadata": map[string]interface{}{
 							"num_events": 23230,
 						},
-						"apps": []interface{}{
-							map[string]interface{}{"name": "danny"},
-							map[string]interface{}{"name": "temi"},
-						},
 						"title": "retro-app",
 					},
 				},
@@ -50,7 +45,6 @@ func TestVariableMap_ProcessResponse(t *testing.T) {
 				"num_events": 23230,
 				"message":    "fetched application successfully",
 				"app_id":     "138-343-12132-4245",
-				"app_name":   "temi",
 			},
 			wantErr: false,
 		},
@@ -92,7 +86,7 @@ func TestVariableMap_ProcessResponse(t *testing.T) {
 				},
 			},
 			wantVariableMap: M{},
-			wantErrMsg:      "field data.uid: not found",
+			wantErrMsg:      "field data.uid does not exist",
 			wantErr:         true,
 		},
 	}
@@ -264,42 +258,6 @@ func Test_getM(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "should_get_array_ref_map",
-			args: args{
-				m: M{
-					"data": map[string]interface{}{
-						"ref": []interface{}{
-							map[string]interface{}{
-								"status": 1234,
-								"marvel": "DC",
-							},
-							map[string]interface{}{
-								"status": 320,
-								"marvel": "stark",
-							},
-						},
-					},
-				},
-				parts: []string{"data", "ref[1]"},
-			},
-			want: map[string]interface{}{
-				"status": 320,
-				"marvel": "stark",
-			},
-			wantErr: false,
-		},
-		{
-			name: "should_get_error_for_ref_not_found",
-			args: args{
-				m: M{
-					"data": map[string]interface{}{},
-				},
-				parts: []string{"data", "ref[1]"},
-			},
-			wantErr:    true,
-			wantErrMsg: "field data.ref[1]: not found",
-		},
-		{
 			name: "should_get_data_map",
 			args: args{
 				m: M{
@@ -329,7 +287,7 @@ func Test_getM(t *testing.T) {
 				parts: []string{"data", "ref", "status"},
 			},
 			want:       nil,
-			wantErrMsg: "field data.ref.status: not found",
+			wantErrMsg: "the field data.ref.status, does not exist",
 			wantErr:    true,
 		},
 		{
@@ -345,7 +303,7 @@ func Test_getM(t *testing.T) {
 				parts: []string{"data", "ref", "status"},
 			},
 			want:       nil,
-			wantErrMsg: "field data.ref.status: required type is object but got int",
+			wantErrMsg: "the field data.ref.status, is not an object in the given map",
 			wantErr:    true,
 		},
 	}
@@ -354,7 +312,7 @@ func Test_getM(t *testing.T) {
 			got, err := getM(tt.args.m, tt.args.parts)
 			if tt.wantErr {
 				require.Error(t, err)
-				require.Equal(t, tt.wantErrMsg, err.Error())
+				require.Equal(t, err.Error(), tt.wantErrMsg)
 				return
 			}
 
@@ -392,38 +350,6 @@ func Test_getKeyInMap(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "should_get_array_key_value",
-			args: args{
-				field: "data[0]",
-				resp: M{
-					"status":  false,
-					"message": "fetched app",
-					"data": []interface{}{
-						"abc",
-						"123",
-						"king",
-					},
-				},
-			},
-			want:    "abc",
-			wantErr: false,
-		},
-		{
-			name: "should_get_array_index_out_of_range",
-			args: args{
-				field: "data[1]",
-				resp: M{
-					"status":  false,
-					"message": "fetched app",
-					"data": []interface{}{
-						"abc",
-					},
-				},
-			},
-			wantErrMsg: "field data[1]: index out of range with length 1",
-			wantErr:    true,
-		},
-		{
 			name: "should_get_key_value_2",
 			args: args{
 				field: "data.ref.marvel",
@@ -449,7 +375,7 @@ func Test_getKeyInMap(t *testing.T) {
 					"message": "fetched app",
 				},
 			},
-			wantErrMsg: "field data: not found",
+			wantErrMsg: "field data does not exist",
 			wantErr:    true,
 		},
 		{
@@ -462,7 +388,7 @@ func Test_getKeyInMap(t *testing.T) {
 					"data":    map[string]interface{}{},
 				},
 			},
-			wantErrMsg: "field data.uid: not found",
+			wantErrMsg: "field data.uid does not exist",
 			wantErr:    true,
 		},
 		{
@@ -475,7 +401,7 @@ func Test_getKeyInMap(t *testing.T) {
 					"data":    map[string]interface{}{},
 				},
 			},
-			wantErrMsg: "field data.ref: not found",
+			wantErrMsg: "the field data.ref, does not exist",
 			wantErr:    true,
 		},
 	}
@@ -490,110 +416,6 @@ func Test_getKeyInMap(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, got, tt.want)
-		})
-	}
-}
-
-func Test_getArrayValue(t *testing.T) {
-	type args struct {
-		v string
-		m M
-	}
-	var tests = []struct {
-		name       string
-		args       args
-		want       interface{}
-		wantErr    bool
-		wantErrMsg string
-	}{
-		{
-			name: "should_get_array_value",
-			args: args{
-				v: "tunnels[0]",
-				m: map[string]interface{}{
-					"tunnels": []interface{}{
-						map[string]interface{}{"url": "https://google.com"},
-					},
-				},
-			},
-			want:    map[string]interface{}{"url": "https://google.com"},
-			wantErr: false,
-		},
-		{
-			name: "should_error_for_invalid_index_string",
-			args: args{
-				v: "tunnels[abc]",
-				m: map[string]interface{}{
-					"tunnels": []interface{}{
-						map[string]interface{}{"url": "https://google.com"},
-					},
-				},
-			},
-			wantErr:    true,
-			wantErrMsg: "invalid index notation: abc",
-		},
-		{
-			name: "should_error_for_invalid_index_range",
-			args: args{
-				v: "tunnels[-2]",
-				m: map[string]interface{}{
-					"tunnels": []interface{}{
-						map[string]interface{}{"url": "https://google.com"},
-					},
-				},
-			},
-			wantErr:    true,
-			wantErrMsg: "invalid index range: -2",
-		},
-		{
-			name: "should_error_for_field_not_found",
-			args: args{
-				v: "data[2]",
-				m: map[string]interface{}{
-					"tunnels": []interface{}{
-						map[string]interface{}{"url": "https://google.com"},
-					},
-				},
-			},
-			wantErr:    true,
-			wantErrMsg: "not found",
-		},
-		{
-			name: "should_error_for_invalid_type",
-			args: args{
-				v: "tunnels[2]",
-				m: map[string]interface{}{
-					"tunnels": map[string]interface{}{"url": "https://google.com"},
-				},
-			},
-			wantErr:    true,
-			wantErrMsg: "required type is an array but has type map[string]interface {}",
-		},
-		{
-			name: "should_error_for_index_out_of_range",
-			args: args{
-				v: "tunnels[1]",
-				m: map[string]interface{}{
-					"tunnels": []interface{}{
-						map[string]interface{}{"url": "https://google.com"},
-					},
-				},
-			},
-			wantErr:    true,
-			wantErrMsg: "index out of range with length 1",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getArrayValue(tt.args.v, tt.args.m)
-			if tt.wantErr {
-				require.Error(t, err)
-				require.Equal(t, tt.wantErrMsg, err.Error())
-				return
-			}
-
-			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
 		})
 	}
 }
