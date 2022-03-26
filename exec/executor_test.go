@@ -72,6 +72,40 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			name: "should_execute_setup_test_case_with_no_request_body",
+			fields: fields{
+				vm: immune.NewVariableMap(),
+			},
+			args: args{
+				ctx: context.Background(),
+				setupTC: &immune.SetupTestCase{
+					Name: "abc",
+					StoreResponseVariables: immune.S{
+						"user_id": "user_id",
+					},
+					ResponseBody: true,
+					Endpoint:     "/create_user",
+					HTTPMethod:   "POST",
+					StatusCode:   http.StatusOK,
+				},
+			},
+			arrangeFn: func() func() {
+				httpmock.Activate()
+
+				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/create_user",
+					httpmock.NewStringResponder(http.StatusOK, `{"user_id":"1223-242-2322"}`))
+
+				return func() {
+					httpmock.DeactivateAndReset()
+				}
+			},
+			wantVariableMap: &immune.VariableMap{
+				VariableToValue: immune.M{"user_id": "1223-242-2322"},
+			},
+			wantErrMsg: "",
+			wantErr:    false,
+		},
+		{
 			name: "should_error_for_wrong_status_code",
 			fields: fields{
 				vm: immune.NewVariableMap(),
@@ -376,6 +410,43 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 					c <- &immune.Signal{ImmuneCallBackID: "12345"}
 				})
 
+				tr.EXPECT().Truncate(gomock.Any()).Times(1)
+				httpmock.Activate()
+
+				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user/1234",
+					httpmock.NewStringResponder(http.StatusOK, `{"user":{"username":"daniel"}}`))
+
+				return func() {
+					httpmock.DeactivateAndReset()
+				}
+			},
+			wantErr: false,
+		},
+		{
+			name: "should_execute_test_case_with_no_request_body",
+			fields: fields{
+				vm: &immune.VariableMap{
+					VariableToValue: immune.M{
+						"user_id":      "1234",
+						"company_name": "abc",
+					},
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				tc: &immune.TestCase{
+					Name:         "abc",
+					Setup:        nil,
+					StatusCode:   200,
+					HTTPMethod:   "POST",
+					Endpoint:     "/update_user/{user_id}",
+					ResponseBody: true,
+				},
+			},
+			idFn: func() string {
+				return "12345"
+			},
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
 				tr.EXPECT().Truncate(gomock.Any()).Times(1)
 				httpmock.Activate()
 
