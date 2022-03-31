@@ -9,7 +9,7 @@
         "route": "/",
         "id_location": "data"
     },
-    "database" : {
+    "database": {
         "type": "mongo",
         "dsn": "mongodb+srv://admin:7h5tAfZiYuCEe6KC42873272642331@cluster1.eqj2e.mongodb.net/convoy-immune"
     },
@@ -17,14 +17,9 @@
     "test_cases": [
         {
             "name": "test_convoy_can_push_event_to_app_with_one_endpoint",
-            "setup": [
-                "setup_group",
-                "setup_app",
-                "setup_endpoint",
-                "setup_event"
-            ],
+            "setup": ["setup_group", "setup_app", "setup_endpoint", "setup_event"],
             "http_method": "POST",
-            "endpoint": "/events?groupID={group_id}",
+            "endpoint": "/events?groupId={group_id}",
             "callback": {
                 "enabled": true,
                 "times": 2
@@ -42,14 +37,9 @@
         },
         {
             "name": "test_convoy_can_push_event_to_app_with_two_endpoint",
-            "setup": [
-                "setup_group",
-                "setup_app",
-                "setup_endpoint",
-                "setup_endpoint"
-            ],
+            "setup": ["setup_group", "setup_app", "setup_endpoint", "setup_endpoint"],
             "http_method": "POST",
-            "endpoint": "/events?groupID={group_id}",
+            "endpoint": "/events?groupId={group_id}",
             "callback": {
                 "enabled": true,
                 "times": 2
