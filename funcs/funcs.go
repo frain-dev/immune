@@ -74,7 +74,7 @@ func SetupApp(ctx context.Context, ex *exec.Executor) error {
 		},
 		RequestBody:  mapper,
 		ResponseBody: true,
-		Endpoint:     "/applications?groupID={group_id}",
+		Endpoint:     "/applications?groupId={group_id}",
 		HTTPMethod:   "POST",
 		StatusCode:   201,
 	}
@@ -106,7 +106,7 @@ func SetupAppEndpoint(ctx context.Context, targetURL string, ex *exec.Executor) 
 		},
 		RequestBody:  mapper,
 		ResponseBody: true,
-		Endpoint:     "/applications/{app_id}/endpoints?groupID={group_id}",
+		Endpoint:     "/applications/{app_id}/endpoints?groupId={group_id}",
 		HTTPMethod:   "POST",
 		StatusCode:   201,
 	}
@@ -139,7 +139,7 @@ func SetupEvent(ctx context.Context, ex *exec.Executor) error {
 		},
 		RequestBody:  mapper,
 		ResponseBody: true,
-		Endpoint:     "/events?groupID={group_id}",
+		Endpoint:     "/events?groupId={group_id}",
 		HTTPMethod:   "POST",
 		StatusCode:   201,
 	}
