@@ -47,16 +47,24 @@ func (s *System) Run(ctx context.Context) error {
 	idFn := func() string {
 		return uuid.New().String()
 	}
-	ex := exec.NewExecutor(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation, truncator, idFn)
+	sv := &immune.SignatureVerifier{
+		ReplayAttacks: s.Callback.Signature.ReplayAttacks,
+		Secret:        s.Callback.Signature.Secret,
+		Header:        s.Callback.Signature.Header,
+		Hash:          s.Callback.Signature.Hash,
+	}
 
-	//log.Info("starting execution of setup test cases")
-	//for i := range s.SetupTestCases {
-	//	err = ex.ExecuteSetupTestCase(ctx, &s.SetupTestCases[i])
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-	//log.Info("finished execution of setup test cases")
+	ex := exec.NewExecutor(
+		cs,
+		http.DefaultClient,
+		s.Variables,
+		sv,
+		s.Callback.MaxWaitSeconds,
+		s.BaseURL,
+		s.Callback.IDLocation,
+		truncator,
+		idFn,
+	)
 
 	log.Info("starting execution of test cases")
 	for i := range s.TestCases {
@@ -64,7 +72,7 @@ func (s *System) Run(ctx context.Context) error {
 		for _, setupName := range tc.Setup {
 			switch setupName {
 			case "setup_group":
-				err = funcs.SetupGroup(ctx, ex)
+				err = funcs.SetupGroup(ctx, ex, &s.Callback.Signature)
 				if err != nil {
 					return err
 				}

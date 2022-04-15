@@ -24,6 +24,7 @@ type Executor struct {
 	idFn                   func() string
 	client                 *http.Client
 	dbTruncator            database.Truncator
+	sv                     *immune.SignatureVerifier
 	vm                     *immune.VariableMap
 	s                      immune.CallbackServer
 }
@@ -32,6 +33,7 @@ func NewExecutor(
 	s immune.CallbackServer,
 	client *http.Client,
 	vm *immune.VariableMap,
+	sv *immune.SignatureVerifier,
 	maxCallbackWaitSeconds uint,
 	baseURL string,
 	callbackIDLocation string,
@@ -39,6 +41,7 @@ func NewExecutor(
 	return &Executor{
 		s:                      s,
 		vm:                     vm,
+		sv:                     sv,
 		idFn:                   idFn,
 		client:                 client,
 		baseURL:                baseURL,
@@ -191,6 +194,12 @@ func (ex *Executor) ExecuteTestCase(ctx context.Context, tc *immune.TestCase) er
 				if sig.ImmuneCallBackID != uid {
 					return errors.Errorf("test_case %s: incorrect callback_id: expected_callback_id '%s', got_callback_id '%s'", tc.Name, uid, sig.ImmuneCallBackID)
 				}
+
+				err = ex.sv.VerifySignatureHeader(sig.Request)
+				if err != nil {
+					return errors.Wrap(err, "failed to verify callback signature header")
+				}
+
 				log.Infof("callback %d for test_case %s received", i, tc.Name)
 			}
 		}

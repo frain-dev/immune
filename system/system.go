@@ -82,6 +82,16 @@ func (s *System) Clean() error {
 		}
 	}
 
+	if s.Callback.Signature.Header == "" {
+		return errors.New("callback signature header cannot be empty")
+	}
+	if s.Callback.Signature.Hash == "" {
+		return errors.New("callback signature hash cannot be empty")
+	}
+	if s.Callback.Signature.Secret == "" {
+		return errors.New("callback signature secret cannot be empty")
+	}
+
 	_, err := url.Parse(s.BaseURL)
 	if err != nil {
 		return fmt.Errorf("base url is not a vaild url: %v", err)

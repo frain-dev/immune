@@ -1,9 +1,11 @@
 package callback
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -95,10 +97,20 @@ func (s *server) Start(ctx context.Context) error {
 func handleCallback(outbound chan<- *immune.Signal) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sig := &immune.Signal{}
-		err := json.NewDecoder(r.Body).Decode(sig)
+		clone := r.Clone(context.Background())
+
+		buf, err := io.ReadAll(r.Body)
 		if err != nil {
-			sig.Err = fmt.Errorf("failed to decode callback body: %v", err)
+			sig.Err = fmt.Errorf("failed to read callback body: %v", err)
+		} else {
+			err = json.Unmarshal(buf, sig)
+			if err != nil {
+				sig.Err = fmt.Errorf("failed to decode callback body: %v", err)
+			}
 		}
+
+		clone.Body = io.NopCloser(bytes.NewBuffer(buf))
+		sig.Request = clone
 		w.WriteHeader(http.StatusOK)
 		outbound <- sig
 	}
