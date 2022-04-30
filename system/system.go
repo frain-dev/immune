@@ -66,6 +66,22 @@ func processOverride(sys, override *System) {
 	if override.Callback.SSLCertFile != "" {
 		sys.Callback.SSLCertFile = override.Callback.SSLCertFile
 	}
+
+	if _, ok := os.LookupEnv("IMMUNE_REPLAY_ATTACKS"); ok {
+		sys.Callback.Signature.ReplayAttacks = override.Callback.Signature.ReplayAttacks
+	}
+
+	if override.Callback.Signature.Secret != "" {
+		sys.Callback.Signature.Secret = override.Callback.Signature.Secret
+	}
+
+	if override.Callback.Signature.Header != "" {
+		sys.Callback.Signature.Header = override.Callback.Signature.Header
+	}
+
+	if override.Callback.Signature.Hash != "" {
+		sys.Callback.Signature.Hash = override.Callback.Signature.Hash
+	}
 }
 
 const maxCallbackWait = 5
@@ -80,6 +96,16 @@ func (s *System) Clean() error {
 		if s.Callback.SSLCertFile == "" || s.Callback.SSLKeyFile == "" {
 			return errors.New("both cert_file and key_file are required for ssl")
 		}
+	}
+
+	if s.Callback.Signature.Header == "" {
+		return errors.New("callback signature header cannot be empty")
+	}
+	if s.Callback.Signature.Hash == "" {
+		return errors.New("callback signature hash cannot be empty")
+	}
+	if s.Callback.Signature.Secret == "" {
+		return errors.New("callback signature secret cannot be empty")
 	}
 
 	_, err := url.Parse(s.BaseURL)

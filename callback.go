@@ -7,13 +7,21 @@ import (
 )
 
 type CallbackConfiguration struct {
-	MaxWaitSeconds uint   `json:"max_wait_seconds"`
-	Port           uint   `json:"port"`
-	Route          string `json:"route"`
-	SSL            bool   `json:"ssl" envconfig:"IMMUNE_SSL"`
-	SSLKeyFile     string `json:"ssl_key_file" envconfig:"IMMUNE_SSL_KEY_FILE"`
-	SSLCertFile    string `json:"ssl_cert_file" envconfig:"IMMUNE_SSL_CERT_FILE"`
-	IDLocation     string `json:"id_location"`
+	MaxWaitSeconds uint                   `json:"max_wait_seconds"`
+	Port           uint                   `json:"port"`
+	Route          string                 `json:"route"`
+	SSL            bool                   `json:"ssl" envconfig:"IMMUNE_SSL"`
+	SSLKeyFile     string                 `json:"ssl_key_file" envconfig:"IMMUNE_SSL_KEY_FILE"`
+	SSLCertFile    string                 `json:"ssl_cert_file" envconfig:"IMMUNE_SSL_CERT_FILE"`
+	IDLocation     string                 `json:"id_location"`
+	Signature      SignatureConfiguration `json:"signature"`
+}
+
+type SignatureConfiguration struct {
+	ReplayAttacks bool   `json:"replay_attacks" envconfig:"IMMUNE_REPLAY_ATTACKS"`
+	Secret        string `json:"secret" envconfig:"IMMUNE_SIGNATURE_SECRET"`
+	Header        string `json:"header" envconfig:"IMMUNE_SIGNATURE_HEADER"`
+	Hash          string `json:"hash" envconfig:"IMMUNE_SIGNATURE_HASH"`
 }
 
 const CallbackIDFieldName = "immune_callback_id"
@@ -51,4 +59,8 @@ type CallbackServer interface {
 	ReceiveCallback(rc chan<- *Signal)
 	Start(ctx context.Context) error
 	Stop()
+}
+
+type CallbackSignatureVerifier interface {
+	VerifyCallbackSignature(s *Signal) error
 }

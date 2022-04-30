@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/frain-dev/immune"
@@ -47,16 +48,28 @@ func (s *System) Run(ctx context.Context) error {
 	idFn := func() string {
 		return uuid.New().String()
 	}
-	ex := exec.NewExecutor(cs, http.DefaultClient, s.Variables, s.Callback.MaxWaitSeconds, s.BaseURL, s.Callback.IDLocation, truncator, idFn)
 
-	//log.Info("starting execution of setup test cases")
-	//for i := range s.SetupTestCases {
-	//	err = ex.ExecuteSetupTestCase(ctx, &s.SetupTestCases[i])
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-	//log.Info("finished execution of setup test cases")
+	sv, err := callback.NewSignatureVerifier(
+		s.Callback.Signature.ReplayAttacks,
+		s.Callback.Signature.Secret,
+		s.Callback.Signature.Header,
+		s.Callback.Signature.Hash,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to get new signature verifier: %v", err)
+	}
+
+	ex := exec.NewExecutor(
+		cs,
+		http.DefaultClient,
+		s.Variables,
+		sv,
+		s.Callback.MaxWaitSeconds,
+		s.BaseURL,
+		s.Callback.IDLocation,
+		truncator,
+		idFn,
+	)
 
 	log.Info("starting execution of test cases")
 	for i := range s.TestCases {
@@ -64,7 +77,7 @@ func (s *System) Run(ctx context.Context) error {
 		for _, setupName := range tc.Setup {
 			switch setupName {
 			case "setup_group":
-				err = funcs.SetupGroup(ctx, ex)
+				err = funcs.SetupGroup(ctx, ex, &s.Callback.Signature)
 				if err != nil {
 					return err
 				}
@@ -74,7 +87,7 @@ func (s *System) Run(ctx context.Context) error {
 					return err
 				}
 			case "setup_endpoint":
-				err = funcs.SetupAppEndpoint(ctx, s.EventTargetURL, ex)
+				err = funcs.SetupAppEndpoint(ctx, s.EventTargetURL, s.Callback.Signature.Secret, ex)
 				if err != nil {
 					return err
 				}

@@ -7,22 +7,28 @@
         "ssl_key_file": "",
         "max_wait_seconds": 20,
         "route": "/",
-        "id_location": "data"
+        "id_location": "data",
+        "signature": {
+            "replay_attacks": true,
+            "secret": "12345",
+            "header": "X-Retro-Signature",
+            "hash": "SHA512"
+        }
     },
     "database": {
         "type": "mongo",
         "dsn": "mongodb+srv://admin:7h5tAfZiYuCEe6KC42873272642331@cluster1.eqj2e.mongodb.net/convoy-immune"
     },
-    "event_target_url": "https://5721-102-219-153-96.ngrok.io",
+    "event_target_url": "https://7e58-197-211-61-35.eu.ngrok.io",
     "test_cases": [
         {
             "name": "test_convoy_can_push_event_to_app_with_one_endpoint",
-            "setup": ["setup_group", "setup_app", "setup_endpoint", "setup_event"],
+            "setup": ["setup_group", "setup_app", "setup_endpoint"],
             "http_method": "POST",
             "endpoint": "/events?groupId={group_id}",
             "callback": {
                 "enabled": true,
-                "times": 2
+                "times": 1
             },
             "request_body": {
                 "app_id": "{app_id}",

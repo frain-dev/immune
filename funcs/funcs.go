@@ -10,13 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func SetupGroup(ctx context.Context, ex *exec.Executor) error {
+func SetupGroup(ctx context.Context, ex *exec.Executor, signatureConfig *immune.SignatureConfiguration) error {
 	req := `{
                 "config": {
+					"replay_attacks": %t,
                     "disableEndpoint": true,
                     "signature": {
-                        "hash": "SHA256",
-                        "header": "X-Retro-Signature"
+                        "hash": "%s",
+                        "header": "%s"
                     },
                     "strategy": {
                         "default": {
@@ -30,7 +31,7 @@ func SetupGroup(ctx context.Context, ex *exec.Executor) error {
                 "name": "immune-group-%s"
             }`
 
-	req = fmt.Sprintf(req, uuid.New().String())
+	req = fmt.Sprintf(req, signatureConfig.ReplayAttacks, signatureConfig.Hash, signatureConfig.Header, uuid.New().String())
 	mapper := map[string]interface{}{}
 	err := json.Unmarshal([]byte(req), &mapper)
 	if err != nil {
@@ -82,17 +83,17 @@ func SetupApp(ctx context.Context, ex *exec.Executor) error {
 	return ex.ExecuteSetupTestCase(ctx, tc)
 }
 
-func SetupAppEndpoint(ctx context.Context, targetURL string, ex *exec.Executor) error {
+func SetupAppEndpoint(ctx context.Context, targetURL string, secret string, ex *exec.Executor) error {
 	req := `{
              "url": "%s",
-                "secret": "12345",
+                "secret": "%s",
                 "description": "Local ngrok endpoint",
                 "events": [
                     "payment.failed"
                 ]
             }`
 
-	req = fmt.Sprintf(req, targetURL)
+	req = fmt.Sprintf(req, targetURL, secret)
 	mapper := map[string]interface{}{}
 	err := json.Unmarshal([]byte(req), &mapper)
 	if err != nil {
