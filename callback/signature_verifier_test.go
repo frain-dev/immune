@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"encoding/hex"
 	"fmt"
-	"hash"
 	"io"
 	"net/http"
 	"strings"
@@ -21,7 +20,6 @@ func TestSignatureVerifier_VerifyCallbackSignature(t *testing.T) {
 		Secret        string
 		Header        string
 		Hash          string
-		hashFn        func() hash.Hash
 	}
 	type args struct {
 		s *immune.Signal
