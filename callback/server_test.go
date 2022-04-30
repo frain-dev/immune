@@ -57,7 +57,9 @@ func Test_handleCallback(t *testing.T) {
 				require.Equal(t, tt.wantErrMsg, s.Error())
 				return
 			}
-			require.Equal(t, tt.wantSignal, <-tt.args.outbound)
+			sig := <-tt.args.outbound
+			sig.Request = nil
+			require.Equal(t, tt.wantSignal, sig)
 		})
 	}
 }

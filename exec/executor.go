@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/frain-dev/immune/callback"
-
 	"github.com/frain-dev/immune"
 	"github.com/frain-dev/immune/database"
 	"github.com/frain-dev/immune/url"
@@ -26,7 +24,7 @@ type Executor struct {
 	idFn                   func() string
 	client                 *http.Client
 	dbTruncator            database.Truncator
-	sv                     *callback.SignatureVerifier
+	sv                     immune.CallbackSignatureVerifier
 	vm                     *immune.VariableMap
 	s                      immune.CallbackServer
 }
@@ -35,7 +33,7 @@ func NewExecutor(
 	s immune.CallbackServer,
 	client *http.Client,
 	vm *immune.VariableMap,
-	sv *callback.SignatureVerifier,
+	sv immune.CallbackSignatureVerifier,
 	maxCallbackWaitSeconds uint,
 	baseURL string,
 	callbackIDLocation string,

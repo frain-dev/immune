@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/frain-dev/immune"
-
-	"golang.org/x/crypto/sha3"
-
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/sha3"
 )
+
+const ConvoyTimestampHeader = "Convoy-Timestamp"
 
 type SignatureVerifier struct {
 	ReplayAttacks bool   `json:"replay_attacks"`
@@ -27,7 +27,7 @@ type SignatureVerifier struct {
 	hashFn        func() hash.Hash
 }
 
-func NewSignatureVerifier(replayAttacks bool, secret, header, hash string) (*SignatureVerifier, error) {
+func NewSignatureVerifier(replayAttacks bool, secret, header, hash string) (immune.CallbackSignatureVerifier, error) {
 	fn, err := getHashFunction(hash)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (sv *SignatureVerifier) VerifyCallbackSignature(s *immune.Signal) error {
 	hasher := hmac.New(sv.hashFn, []byte(sv.Secret))
 
 	if sv.ReplayAttacks {
-		timestampStr := r.Header.Get("Convoy-Timestamp")
+		timestampStr := r.Header.Get(ConvoyTimestampHeader)
 		timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "unable to parse signature timestamp")

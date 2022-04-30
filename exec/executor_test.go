@@ -14,7 +14,7 @@ import (
 )
 
 func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
-	ex := NewExecutor(nil, http.DefaultClient, nil, 10, "http://localhost:5005", "data", nil, nil)
+	ex := NewExecutor(nil, http.DefaultClient, nil, nil, 10, "http://localhost:5005", "data", nil, nil)
 
 	type fields struct {
 		vm *immune.VariableMap
@@ -366,7 +366,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 		idFn       func() string
 		fields     fields
 		args       args
-		arrangeFn  func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func()
+		arrangeFn  func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func()
 		wantErr    bool
 		wantErrMsg string
 	}{
@@ -404,13 +404,14 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				var rc chan<- *immune.Signal
 				server.EXPECT().ReceiveCallback(gomock.AssignableToTypeOf(rc)).Times(2).DoAndReturn(func(c chan<- *immune.Signal) {
 					c <- &immune.Signal{ImmuneCallBackID: "12345"}
 				})
 
 				tr.EXPECT().Truncate(gomock.Any()).Times(1)
+				sv.EXPECT().VerifyCallbackSignature(gomock.Any()).Times(2)
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user/1234",
@@ -446,7 +447,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				tr.EXPECT().Truncate(gomock.Any()).Times(1)
 				httpmock.Activate()
 
@@ -492,7 +493,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				var rc chan<- *immune.Signal
 				server.EXPECT().ReceiveCallback(gomock.AssignableToTypeOf(rc)).Times(1).DoAndReturn(func(c chan<- *immune.Signal) {
 					c <- &immune.Signal{Err: errors.New("failed to decode callback body")}
@@ -539,7 +540,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 					},
 				},
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user/1234",
@@ -584,7 +585,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user",
@@ -630,7 +631,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user",
@@ -675,7 +676,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user",
@@ -720,7 +721,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user",
@@ -765,7 +766,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user",
@@ -810,7 +811,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				httpmock.Activate()
 
 				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user",
@@ -855,7 +856,7 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			idFn: func() string {
 				return "12345"
 			},
-			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator) func() {
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
 				var rc chan<- *immune.Signal
 				server.EXPECT().ReceiveCallback(gomock.AssignableToTypeOf(rc)).Times(1).Do(func(rc chan<- *immune.Signal) {
 					rc <- &immune.Signal{ImmuneCallBackID: "1234"}
@@ -872,21 +873,74 @@ func TestExecutor_ExecuteTestCase(t *testing.T) {
 			wantErr:    true,
 			wantErrMsg: "test_case abc: incorrect callback_id: expected_callback_id '12345', got_callback_id '1234'",
 		},
+		{
+			name: "should_fail_to_verify_callback_signature",
+			fields: fields{
+				vm: &immune.VariableMap{
+					VariableToValue: immune.M{
+						"user_id": "1234",
+					},
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				tc: &immune.TestCase{
+					Name:         "abc",
+					Setup:        nil,
+					StatusCode:   200,
+					HTTPMethod:   "POST",
+					Endpoint:     "/update_user",
+					ResponseBody: true,
+					Callback: immune.Callback{
+						Enabled: true,
+						Times:   2,
+					},
+					RequestBody: immune.M{
+						"email": "dan@gmail.com",
+						"phone": 23453530833,
+						"data":  map[string]interface{}{},
+					},
+				},
+			},
+			idFn: func() string {
+				return "1234"
+			},
+			arrangeFn: func(server *mocks.MockCallbackServer, tr *mocks.MockTruncator, sv *mocks.MockCallbackSignatureVerifier) func() {
+				var rc chan<- *immune.Signal
+				server.EXPECT().ReceiveCallback(gomock.AssignableToTypeOf(rc)).Times(1).Do(func(rc chan<- *immune.Signal) {
+					rc <- &immune.Signal{ImmuneCallBackID: "1234"}
+				})
+				sv.EXPECT().VerifyCallbackSignature(gomock.Any()).Times(1).Return(errors.New("failed"))
+
+				httpmock.Activate()
+
+				httpmock.RegisterResponder(http.MethodPost, "http://localhost:5005/update_user",
+					httpmock.NewStringResponder(http.StatusOK, `{"immune_callback_id":"1234"}`))
+
+				return func() {
+					httpmock.DeactivateAndReset()
+				}
+			},
+			wantErr:    true,
+			wantErrMsg: "failed to verify callback signature header: failed",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockDBTruncator := mocks.NewMockTruncator(ctrl)
-
 			mockCallbackServer := mocks.NewMockCallbackServer(ctrl)
+			sv := mocks.NewMockCallbackSignatureVerifier(ctrl)
+
 			if tt.arrangeFn != nil {
-				deferFn := tt.arrangeFn(mockCallbackServer, mockDBTruncator)
+				deferFn := tt.arrangeFn(mockCallbackServer, mockDBTruncator, sv)
 				defer deferFn()
 			}
 
 			ex.s = mockCallbackServer
 			ex.dbTruncator = mockDBTruncator
+			ex.sv = sv
 			ex.vm = tt.fields.vm
 			ex.idFn = tt.idFn
 			err := ex.ExecuteTestCase(tt.args.ctx, tt.args.tc)
