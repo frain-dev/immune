@@ -10,7 +10,7 @@
         "id_location": "data",
         "signature": {
             "replay_attacks": true,
-            "secret": "1234",
+            "secret": "12345",
             "header": "X-Retro-Signature",
             "hash": "SHA512"
         }
@@ -19,7 +19,7 @@
         "type": "mongo",
         "dsn": "mongodb+srv://admin:7h5tAfZiYuCEe6KC42873272642331@cluster1.eqj2e.mongodb.net/convoy-immune"
     },
-    "event_target_url": "https://5b7d-129-205-124-229.eu.ngrok.io",
+    "event_target_url": "https://7e58-197-211-61-35.eu.ngrok.io",
     "test_cases": [
         {
             "name": "test_convoy_can_push_event_to_app_with_one_endpoint",

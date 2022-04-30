@@ -60,3 +60,7 @@ type CallbackServer interface {
 	Start(ctx context.Context) error
 	Stop()
 }
+
+type CallbackSignatureVerifier interface {
+	VerifyCallbackSignature(s *Signal) error
+}

@@ -66,6 +66,22 @@ func processOverride(sys, override *System) {
 	if override.Callback.SSLCertFile != "" {
 		sys.Callback.SSLCertFile = override.Callback.SSLCertFile
 	}
+
+	if _, ok := os.LookupEnv("IMMUNE_REPLAY_ATTACKS"); ok {
+		sys.Callback.Signature.ReplayAttacks = override.Callback.Signature.ReplayAttacks
+	}
+
+	if override.Callback.Signature.Secret != "" {
+		sys.Callback.Signature.Secret = override.Callback.Signature.Secret
+	}
+
+	if override.Callback.Signature.Header != "" {
+		sys.Callback.Signature.Header = override.Callback.Signature.Header
+	}
+
+	if override.Callback.Signature.Hash != "" {
+		sys.Callback.Signature.Hash = override.Callback.Signature.Hash
+	}
 }
 
 const maxCallbackWait = 5

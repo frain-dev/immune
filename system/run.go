@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/frain-dev/immune"
@@ -47,11 +48,15 @@ func (s *System) Run(ctx context.Context) error {
 	idFn := func() string {
 		return uuid.New().String()
 	}
-	sv := &immune.SignatureVerifier{
-		ReplayAttacks: s.Callback.Signature.ReplayAttacks,
-		Secret:        s.Callback.Signature.Secret,
-		Header:        s.Callback.Signature.Header,
-		Hash:          s.Callback.Signature.Hash,
+
+	sv, err := callback.NewSignatureVerifier(
+		s.Callback.Signature.ReplayAttacks,
+		s.Callback.Signature.Secret,
+		s.Callback.Signature.Header,
+		s.Callback.Signature.Hash,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to get new signature verifier: %v", err)
 	}
 
 	ex := exec.NewExecutor(
@@ -82,7 +87,7 @@ func (s *System) Run(ctx context.Context) error {
 					return err
 				}
 			case "setup_endpoint":
-				err = funcs.SetupAppEndpoint(ctx, s.EventTargetURL, ex)
+				err = funcs.SetupAppEndpoint(ctx, s.EventTargetURL, s.Callback.Signature.Secret, ex)
 				if err != nil {
 					return err
 				}

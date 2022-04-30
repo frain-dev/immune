@@ -352,7 +352,7 @@ func TestExecutor_ExecuteSetupTestCase(t *testing.T) {
 }
 
 func TestExecutor_ExecuteTestCase(t *testing.T) {
-	ex := NewExecutor(nil, http.DefaultClient, nil, 10, "http://localhost:5005", "data", nil, nil)
+	ex := NewExecutor(nil, http.DefaultClient, nil, nil, 10, "http://localhost:5005", "data", nil, nil)
 	type fields struct {
 		vm *immune.VariableMap
 	}

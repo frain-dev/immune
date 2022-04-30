@@ -1,7 +1,6 @@
-package immune
+package callback
 
 import (
-	"bytes"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha1"
@@ -10,9 +9,10 @@ import (
 	"encoding/hex"
 	"hash"
 	"io/ioutil"
-	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/frain-dev/immune"
 
 	"golang.org/x/crypto/sha3"
 
@@ -24,38 +24,43 @@ type SignatureVerifier struct {
 	Secret        string `json:"secret"`
 	Header        string `json:"header"`
 	Hash          string `json:"hash"`
+	hashFn        func() hash.Hash
 }
 
-func (sv *SignatureVerifier) VerifySignatureHeader(r *http.Request) error {
-	signature := r.Header.Get(sv.Header)
+func NewSignatureVerifier(replayAttacks bool, secret, header, hash string) (*SignatureVerifier, error) {
+	fn, err := getHashFunction(hash)
+	if err != nil {
+		return nil, err
+	}
 
+	return &SignatureVerifier{
+		ReplayAttacks: replayAttacks,
+		Secret:        secret,
+		Header:        header,
+		Hash:          hash,
+		hashFn:        fn,
+	}, nil
+}
+
+func (sv *SignatureVerifier) VerifyCallbackSignature(s *immune.Signal) error {
+	r := s.Request
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return errors.Wrap(err, "unable to read request body")
 	}
 
-	fn, err := getHashFunction(sv.Hash)
-	if err != nil {
-		return err
-	}
-
-	hasher := hmac.New(fn, []byte(sv.Secret))
-	hasher.Write(buf)
-	sum := hasher.Sum(nil)
-
-	var actual = make([]byte, len(sum))
-	_, err = hex.Decode(actual, []byte(signature))
+	signatureHex := []byte(r.Header.Get(sv.Header))
+	var signature = make([]byte, hex.DecodedLen(len(signatureHex)))
+	_, err = hex.Decode(signature, signatureHex)
 	if err != nil {
 		return errors.Wrap(err, "unable to hex decode signature body")
 	}
 
-	if sv.ReplayAttacks {
-		parts := bytes.Split(actual, []byte(","))
-		if len(parts) < 2 {
-			return errors.Errorf(`replay attack signature header must have 2 parts seperated by ","`)
-		}
+	hasher := hmac.New(sv.hashFn, []byte(sv.Secret))
 
-		timestamp, err := strconv.ParseInt(string(parts[0]), 10, 0)
+	if sv.ReplayAttacks {
+		timestampStr := r.Header.Get("Convoy-Timestamp")
+		timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "unable to parse signature timestamp")
 		}
@@ -65,10 +70,13 @@ func (sv *SignatureVerifier) VerifySignatureHeader(r *http.Request) error {
 		if d > time.Minute {
 			return errors.Errorf("replay attack timestamp is more than a minute ago")
 		}
-		actual = parts[1]
+
+		hasher.Write([]byte(timestampStr))
+		hasher.Write([]byte(","))
 	}
 
-	if !hmac.Equal(actual, sum) {
+	hasher.Write(buf)
+	if !hmac.Equal(signature, hasher.Sum(nil)) {
 		return errors.New("signature invalid")
 	}
 	return nil

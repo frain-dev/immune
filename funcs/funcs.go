@@ -83,17 +83,17 @@ func SetupApp(ctx context.Context, ex *exec.Executor) error {
 	return ex.ExecuteSetupTestCase(ctx, tc)
 }
 
-func SetupAppEndpoint(ctx context.Context, targetURL string, ex *exec.Executor) error {
+func SetupAppEndpoint(ctx context.Context, targetURL string, secret string, ex *exec.Executor) error {
 	req := `{
              "url": "%s",
-                "secret": "12345",
+                "secret": "%s",
                 "description": "Local ngrok endpoint",
                 "events": [
                     "payment.failed"
                 ]
             }`
 
-	req = fmt.Sprintf(req, targetURL)
+	req = fmt.Sprintf(req, targetURL, secret)
 	mapper := map[string]interface{}{}
 	err := json.Unmarshal([]byte(req), &mapper)
 	if err != nil {
