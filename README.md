@@ -1,22 +1,26 @@
-<h1 align="center">Immune - Testing Tool</h1>
-Immune a testing tool, that will be used to load test convoy's api, and possibly other APIs.
+### 
 
-## Problem
+<h1 align="center">Hi there 👋, I'm Daniel</h1>
+<h3 align="center">A Passionate Software Engineer</h3>
 
-As of today, there is no comprehensive test suite for convoy, to ensure its stability in a production environment. As such we are unable to ensure the durability of convoy under reasonable load beforehand.
+- 💬 Ask me about Golang, gRPC and writing SQL queries.
+- 📫 How to reach me: [<img src='https://img.icons8.com/fluency/48/000000/gmail-new.png' alt='gmail' height='18'>](mailto:danvixent@gmail.com), [<img src='https://img.icons8.com/color/48/000000/twitter--v1.png' alt='twitter' height='18'>](https://twitter.com/danvixent), [<img src='https://img.icons8.com/external-justicon-flat-justicon/64/000000/external-linkedin-social-media-justicon-flat-justicon.png' alt='LinkedIn' height='18'>](https://linkedin.com/in/daniel-oluojomu).
+- ⚡ Fun fact: I love chess.
 
-### Structure
+---
 
-Given how convoy works, the proper way to do testing would be to simulate the entire flow that a user would go through. An example:
+<img align="left" alt="Daniel's Github Stats" src="https://github-readme-stats.vercel.app/api?username=danvixent&theme=dark&show_icons=true&line_height=40&count_private=true"/>
 
-```text
-♟️ user_api → convoy → various_endpoints
-```
+<img alt="Daniel's Top Languages" src="https://github-readme-stats.vercel.app/api/top-langs/?username=danvixent&line_height=30&theme=dark&show_icons=true" />
 
-This goal of immune is to simulate it in this manner:
+---
 
-```text
-♟️ immune → convoy → immune_callback
-```
+### 📝 My most recent blog posts
 
-Immune will send events to convoy and expect those events to come through to its callback endpoint. This does not mean it will wait indefinitely, immune will have its own deadline, any callbacks that did not come through before the deadline is hit, will be reported.
+- [Setup PostgreSQL with SSL inside a Docker Container](https://dev.to/danvixent/how-to-setup-postgresql-with-ssl-inside-a-docker-container-5f3)
+
+curl  \
+-u "c2hpbmluZy1jYXJkaW5hbC0xMzgwOCTda2JmtIelxIbvCs9c3VFA01124DTte-s:YTU2MzYxYjktMWE1MS00OWQ1LWEzY2ItMjk4ZGJjODgzY2U1"
+
+curl "https://shining-cardinal-13808-eu1-rest-kafka.upstash.io/produce/convoy-kfk" -u "c2hpbmluZy1jYXJkaW5hbC0xMzgwOCTda2JmtIelxIbvCs9c3VFA01124DTte-s:YTU2MzYxYjktMWE1MS00OWQ1LWEzY2ItMjk4ZGJjODgzY2U1" \
+-d '{"value": "{\"custom_headers\": {\"x-sig\": \"convoy\"},\"data\": {\"name\": \"daniel\"},\"endpoint_id\":\"01H70M8WC8YXR3ZJ9AYJ6KW67Z\",\"event_type\": \"*\"}"}'

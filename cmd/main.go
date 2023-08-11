@@ -1,10 +1,9 @@
 package main
 
 import (
-	"context"
 	"os"
 
-	"github.com/frain-dev/immune/system"
+	"github.com/frain-dev/immune/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
@@ -25,57 +24,45 @@ func main() {
 		ForceFormatting: true,
 	})
 
+	a := &App{}
 	cmd := &cobra.Command{
-		Use:   "Immune",
-		Short: "API Testing tool",
+		Use:               "Immune",
+		Short:             "API Testing tool",
+		PersistentPreRunE: PreRun(a),
 	}
 
 	var configFile string
 	cmd.PersistentFlags().StringVar(&configFile, "config", "./immune.json", "Configuration file for immune")
 
-	cmd.AddCommand(addRunCommand())
+	cmd.AddCommand(addFireCommand(a))
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func addRunCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "run",
-		Aliases: []string{"r"},
-		Short:   "Run the Immune tests",
-		Run: func(cmd *cobra.Command, args []string) {
-			err := run(cmd)
-			if err != nil {
-				log.Fatal(err)
-			}
-		},
-	}
-	return cmd
+type App struct {
+	config *config.Config
 }
 
-func run(cmd *cobra.Command) error {
-	cfgPath, err := cmd.Flags().GetString("config")
-	if err != nil {
-		return err
-	}
+func PreRun(app *App) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		cfgPath, err := cmd.Flags().GetString("config")
+		if err != nil {
+			return err
+		}
 
-	sys, err := system.NewSystem(cfgPath)
-	if err != nil {
-		return err
-	}
+		sys, err := config.LoadConfig(cfgPath)
+		if err != nil {
+			return err
+		}
 
-	err = sys.Clean()
-	if err != nil {
-		return err
-	}
+		err = sys.Validate()
+		if err != nil {
+			return err
+		}
 
-	err = sys.Run(context.Background())
-	if err != nil {
-		return err
+		app.config = sys
+		return nil
 	}
-
-	log.Infof("all tests passed")
-	return nil
 }
