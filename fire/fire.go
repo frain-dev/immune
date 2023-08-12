@@ -53,7 +53,7 @@ func (f *Fire) Start(ctx context.Context) (*Log, error) {
 	}
 
 	var (
-		l     = NewLog()
+		l     = NewLog(f.cfg.Events)
 		event = &datastore.Event{}
 		c     = time.Now()
 		resp  *Response
@@ -72,6 +72,7 @@ func (f *Fire) Start(ctx context.Context) (*Log, error) {
 			log.WithError(err).Error("send event request failed")
 			continue
 		}
+		l.RequestDurations = append(l.RequestDurations, time.Since(now).Milliseconds()) // record request duration
 
 		l.EventsSent++
 		err = resp.DecodeJSON(event)
@@ -86,6 +87,7 @@ func (f *Fire) Start(ctx context.Context) (*Log, error) {
 	}
 
 	l.TotalTimeTaken = fmt.Sprintf("%f minutes", time.Since(c).Minutes())
+	l.CalculateStats()
 
 	return l, nil
 }
