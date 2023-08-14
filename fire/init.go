@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	convoyConfig "github.com/frain-dev/convoy/config"
+
 	"github.com/frain-dev/convoy/api/models"
 	"github.com/frain-dev/convoy/datastore"
 	"github.com/frain-dev/immune"
@@ -138,12 +140,12 @@ func (f *Fire) createProject(ctx context.Context) error {
 				RetryCount: 3,
 			},
 			Signature: &models.SignatureConfiguration{
-				Header: "X-Immune-Signature",
+				Header: convoyConfig.SignatureHeaderProvider(immune.DefaultSignatureHeader),
 				Versions: []models.SignatureVersion{
 					{
 						UID:       ulid.Make().String(),
-						Hash:      "SHA256",
-						Encoding:  "hex",
+						Hash:      immune.DefaultHash,
+						Encoding:  immune.DefaultEncoding,
 						CreatedAt: time.Now(),
 					},
 				},

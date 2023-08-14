@@ -6,6 +6,8 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/frain-dev/convoy/datastore"
+
 	"github.com/frain-dev/convoy/util"
 
 	"github.com/kelseyhightower/envconfig"
@@ -22,14 +24,26 @@ const (
 	PubSubTest  TestType = "pub_sub"
 )
 
-// Config represents the entire suite to be run against an API
 type Config struct {
-	ConvoyURL      string   `json:"convoy_url" envconfig:"IMMUNE_CONVOY_URL"`
-	EndpointURL    string   `json:"endpoint_url" envconfig:"IMMUNE_ENDPOINT_URL"`
-	EndpointSecret string   `json:"endpoint_secret" envconfig:"IMMUNE_ENDPOINT_SECRET"`
-	Events         int64    `json:"events" envconfig:"IMMUNE_EVENTS"`
-	TestType       TestType `json:"test_type" envconfig:"IMMUNE_CONVOY_URL"`
-	LogFile        string   `json:"log_file" envconfig:"IMMUNE_LOG_FILE"`
+	ConvoyURL              string                  `json:"convoy_url" envconfig:"IMMUNE_CONVOY_URL"`
+	EndpointURL            string                  `json:"endpoint_url" envconfig:"IMMUNE_ENDPOINT_URL"`
+	EndpointSecret         string                  `json:"endpoint_secret" envconfig:"IMMUNE_ENDPOINT_SECRET"`
+	Events                 int64                   `json:"events" envconfig:"IMMUNE_EVENTS"`
+	TestType               TestType                `json:"test_type" envconfig:"IMMUNE_CONVOY_URL"`
+	LogFile                string                  `json:"log_file" envconfig:"IMMUNE_LOG_FILE"`
+	RecvTimeout            int                     `json:"recv_timeout" envconfig:"IMMUNE_RECV_TIMEOUT"`
+	RecvPort               string                  `json:"recv_port" envconfig:"IMMUNE_RECV_PORT"`
+	EndpointAuthentication *EndpointAuthentication `json:"endpoint_authentication"`
+}
+
+type ApiKey struct {
+	HeaderValue string `json:"header_value" valid:"required" envconfig:"IMMUNE_ENDPOINT_AUTH_HEADER_VALUE"`
+	HeaderName  string `json:"header_name" valid:"required" envconfig:"IMMUNE_ENDPOINT_AUTH_HEADER_NAME"`
+}
+
+type EndpointAuthentication struct {
+	Type   datastore.EndpointAuthenticationType `json:"type,omitempty"  envconfig:"IMMUNE_ENDPOINT_AUTH_TYPE"`
+	ApiKey *ApiKey                              `json:"api_key"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -103,13 +117,11 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-func Override(oldCfg, newCfg *Config) error {
+func Override(oldCfg, newCfg *Config) {
 	ov := reflect.ValueOf(oldCfg).Elem()
 	nv := reflect.ValueOf(newCfg).Elem()
 
 	overrideFields(ov, nv)
-
-	return nil
 }
 
 func overrideFields(ov, nv reflect.Value) {

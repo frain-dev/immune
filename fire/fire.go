@@ -17,7 +17,6 @@ import (
 
 type Fire struct {
 	cfg           *config.Config
-	outFile       string
 	jwtToken      string
 	ProjectApiKey string
 	ProjectID     string
