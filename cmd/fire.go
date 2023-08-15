@@ -20,7 +20,7 @@ func addFireCommand(a *App) *cobra.Command {
 				log.Fatal(err)
 			}
 
-			err = l.WriteToFile(a.config.LogFile)
+			err = l.WriteToFile(a.config.FireLogFile)
 			if err != nil {
 				log.Fatal(err)
 			}

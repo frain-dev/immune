@@ -2,18 +2,26 @@ package recv
 
 import (
 	"fmt"
+	"net/http"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/frain-dev/immune"
 
 	"github.com/frain-dev/immune/util"
 )
 
 type Log struct {
-	EventsReceived    int               `json:"events_sent"`
-	AuthFailures      int               `json:"auth_failures"`      // caused by authentication failure
-	SignatureFailures int               `json:"signature_failures"` // caused by signature failure
-	EventRecvTime     map[string]string `json:"event_recv_time"`
-	EventCount        map[string]int    `json:"event_count"`
-	ErrorRate         string            `json:"error_rate"`
-	SuccessRate       string            `json:"success_rate"`
+	AuthFailures      int64  `json:"auth_failures"`      // caused by authentication failure
+	SignatureFailures int64  `json:"signature_failures"` // caused by signature failure
+	ErrorRate         string `json:"error_rate"`
+	SuccessRate       string `json:"success_rate"`
+
+	captureLock      sync.Mutex          // protects the fields below
+	EventsReceived   int                 `json:"events_sent"`
+	EventRecvTime    map[string]string   `json:"event_recv_time"`
+	EventsDeliveries map[string][]string `json:"event_count"`
 }
 
 func NewLog() *Log {
@@ -22,7 +30,7 @@ func NewLog() *Log {
 		AuthFailures:      0,
 		SignatureFailures: 0,
 		EventRecvTime:     map[string]string{},
-		EventCount:        map[string]int{},
+		EventsDeliveries:  map[string][]string{},
 		ErrorRate:         "",
 		SuccessRate:       "",
 	}
@@ -42,4 +50,26 @@ func (l *Log) CalculateStats() {
 
 func calculatePercentage(part, whole float64) float64 {
 	return (part / whole) * 100
+}
+
+func (l *Log) CaptureHeaders(r *http.Request, now *time.Time) {
+	l.captureLock.Lock()
+	l.EventsReceived++
+
+	eventID := r.Header.Get(immune.DefaultEventIDHeader)
+	deliveryID := r.Header.Get(immune.DefaultEventDeliveryIDHeader)
+
+	l.EventRecvTime[eventID] = now.Format(time.RFC3339)
+
+	l.EventsDeliveries[eventID] = append(l.EventsDeliveries[eventID], deliveryID)
+
+	l.captureLock.Unlock()
+}
+
+func (l *Log) AddAuthFailure() {
+	atomic.AddInt64(&l.AuthFailures, int64(1))
+}
+
+func (l *Log) AddSignatureFailure() {
+	atomic.AddInt64(&l.SignatureFailures, int64(1))
 }

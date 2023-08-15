@@ -40,22 +40,17 @@ func NewReceiver(cfg *config.Config) *Receiver {
 
 func (rc *Receiver) OK(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
-	rc.l.EventsReceived++
-
-	eventID := r.Header.Get(immune.DefaultEventIDHeader)
-	rc.l.EventRecvTime[eventID] = now.Format(time.RFC3339)
-
-	rc.l.EventCount[eventID]++
+	rc.l.CaptureHeaders(r, &now)
 
 	if !rc.authenticator.Authenticate(r) {
-		rc.l.AuthFailures++
+		rc.l.AddAuthFailure()
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	err := rc.VerifyRequest(r)
 	if err != nil {
-		rc.l.SignatureFailures++
+		rc.l.AddSignatureFailure()
 		log.WithError(err).Error("failed to verify request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -84,7 +79,7 @@ func (rc *Receiver) VerifyRequest(r *http.Request) error {
 	return nil
 }
 
-func (rc *Receiver) Listen() {
+func (rc *Receiver) Listen() *Log {
 	go func() {
 		// service connections
 		if err := rc.s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -105,6 +100,9 @@ func (rc *Receiver) Listen() {
 	}()
 
 	rc.gracefulShutdown(timeoutChan)
+
+	rc.l.CalculateStats()
+	return rc.l
 }
 
 func (rc *Receiver) gracefulShutdown(timeoutChan chan struct{}) {

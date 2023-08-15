@@ -14,9 +14,14 @@ func addRecvCommand(a *App) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			rc := recv.NewReceiver(a.config)
 
-			rc.Listen()
+			l := rc.Listen()
 
-			log.Infof("Fire command completed successfully")
+			err := l.WriteToFile(a.config.RecvLogFile)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Infof("Recv command completed successfully")
 		},
 	}
 	return cmd

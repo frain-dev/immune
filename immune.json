@@ -3,12 +3,21 @@
     "endpoint_url": "http://localhost:80",
     "endpoint_secret": "gertere",
     "events": 3000,
-    "log_file": "./logs/logger/log1.txt",
+    "fire_log_file": "./logs/logger/log1.txt",
+    "recv_log_file": "./logs/logger/log1.txt",
+    "diff_log_file": "./logs/logger/log1.txt",
     "test_type": "single",
     "endpoint_config": {
         "secret": "gertere",
         "number": 1,
         "deliveries_per_event": 2,
-        "owner_id": "eft"
+        "owner_id": "eft",
+        "authentication": {
+            "type": "api_key",
+            "api_key": {
+                "header_value": "",
+                "header_name": ""
+            }
+        }
     }
 }

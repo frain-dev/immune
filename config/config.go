@@ -30,7 +30,9 @@ type Config struct {
 	EndpointSecret         string                  `json:"endpoint_secret" envconfig:"IMMUNE_ENDPOINT_SECRET"`
 	Events                 int64                   `json:"events" envconfig:"IMMUNE_EVENTS"`
 	TestType               TestType                `json:"test_type" envconfig:"IMMUNE_CONVOY_URL"`
-	LogFile                string                  `json:"log_file" envconfig:"IMMUNE_LOG_FILE"`
+	FireLogFile            string                  `json:"fire_log_file" envconfig:"IMMUNE_FIRE_LOG_FILE"`
+	RecvLogFile            string                  `json:"recv_log_file" envconfig:"IMMUNE_RECV_LOG_FILE"`
+	DiffLogFile            string                  `json:"diff_log_file" envconfig:"IMMUNE_DIFF_LOG_FILE"`
 	RecvTimeout            int                     `json:"recv_timeout" envconfig:"IMMUNE_RECV_TIMEOUT"`
 	RecvPort               string                  `json:"recv_port" envconfig:"IMMUNE_RECV_PORT"`
 	EndpointAuthentication *EndpointAuthentication `json:"endpoint_authentication"`
@@ -110,7 +112,7 @@ func (c *Config) Validate() error {
 		c.Events = numEvents
 	}
 
-	if util.IsStringEmpty(c.LogFile) {
+	if util.IsStringEmpty(c.FireLogFile) {
 		return fmt.Errorf("empty log file")
 	}
 
