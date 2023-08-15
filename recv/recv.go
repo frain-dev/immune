@@ -30,7 +30,7 @@ func NewReceiver(cfg *config.Config) *Receiver {
 	}
 	return &Receiver{
 		cfg:           cfg,
-		authenticator: auth.NewAuthenticator(cfg),
+		authenticator: auth.NewAuthenticator(&cfg.EndpointConfig),
 		s: &http.Server{
 			Addr: ":" + cfg.RecvPort,
 		},
@@ -63,7 +63,7 @@ func (rc *Receiver) VerifyRequest(r *http.Request) error {
 	opts := &verifier.HmacOptions{
 		Header:   immune.DefaultSignatureHeader,
 		Hash:     immune.DefaultHash,
-		Secret:   rc.cfg.EndpointSecret,
+		Secret:   rc.cfg.EndpointConfig.Secret,
 		Encoding: immune.DefaultEncoding,
 	}
 

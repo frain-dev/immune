@@ -18,11 +18,13 @@ type Log struct {
 	ErrorRate         string `json:"error_rate"`
 	SuccessRate       string `json:"success_rate"`
 
-	captureLock      sync.Mutex          // protects the fields below
-	EventsReceived   int                 `json:"events_sent"`
-	EventRecvTime    map[string]string   `json:"event_recv_time"`
-	EventsDeliveries map[string][]string `json:"event_count"`
+	captureLock      sync.Mutex        // protects the fields below
+	EventsReceived   int               `json:"events_sent"`
+	EventRecvTime    map[string]string `json:"event_recv_time"`
+	EventsDeliveries map[string]MI     `json:"event_count"`
 }
+
+type MI map[string]int
 
 func NewLog() *Log {
 	return &Log{
@@ -30,7 +32,7 @@ func NewLog() *Log {
 		AuthFailures:      0,
 		SignatureFailures: 0,
 		EventRecvTime:     map[string]string{},
-		EventsDeliveries:  map[string][]string{},
+		EventsDeliveries:  map[string]MI{},
 		ErrorRate:         "",
 		SuccessRate:       "",
 	}
@@ -61,7 +63,7 @@ func (l *Log) CaptureHeaders(r *http.Request, now *time.Time) {
 
 	l.EventRecvTime[eventID] = now.Format(time.RFC3339)
 
-	l.EventsDeliveries[eventID] = append(l.EventsDeliveries[eventID], deliveryID)
+	l.EventsDeliveries[eventID][deliveryID]++
 
 	l.captureLock.Unlock()
 }

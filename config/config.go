@@ -25,17 +25,23 @@ const (
 )
 
 type Config struct {
-	ConvoyURL              string                  `json:"convoy_url" envconfig:"IMMUNE_CONVOY_URL"`
-	EndpointURL            string                  `json:"endpoint_url" envconfig:"IMMUNE_ENDPOINT_URL"`
-	EndpointSecret         string                  `json:"endpoint_secret" envconfig:"IMMUNE_ENDPOINT_SECRET"`
-	Events                 int64                   `json:"events" envconfig:"IMMUNE_EVENTS"`
-	TestType               TestType                `json:"test_type" envconfig:"IMMUNE_CONVOY_URL"`
-	FireLogFile            string                  `json:"fire_log_file" envconfig:"IMMUNE_FIRE_LOG_FILE"`
-	RecvLogFile            string                  `json:"recv_log_file" envconfig:"IMMUNE_RECV_LOG_FILE"`
-	DiffLogFile            string                  `json:"diff_log_file" envconfig:"IMMUNE_DIFF_LOG_FILE"`
-	RecvTimeout            int                     `json:"recv_timeout" envconfig:"IMMUNE_RECV_TIMEOUT"`
-	RecvPort               string                  `json:"recv_port" envconfig:"IMMUNE_RECV_PORT"`
-	EndpointAuthentication *EndpointAuthentication `json:"endpoint_authentication"`
+	ConvoyURL      string         `json:"convoy_url" envconfig:"IMMUNE_CONVOY_URL"`
+	EndpointConfig EndpointConfig `json:"endpoint_config"`
+	Events         int64          `json:"events" envconfig:"IMMUNE_EVENTS"`
+	TestType       TestType       `json:"test_type" envconfig:"IMMUNE_CONVOY_URL"`
+	FireLogFile    string         `json:"fire_log_file" envconfig:"IMMUNE_FIRE_LOG_FILE"`
+	RecvLogFile    string         `json:"recv_log_file" envconfig:"IMMUNE_RECV_LOG_FILE"`
+	DiffLogFile    string         `json:"diff_log_file" envconfig:"IMMUNE_DIFF_LOG_FILE"`
+	RecvTimeout    int            `json:"recv_timeout" envconfig:"IMMUNE_RECV_TIMEOUT"`
+	RecvPort       string         `json:"recv_port" envconfig:"IMMUNE_RECV_PORT"`
+}
+
+type EndpointConfig struct {
+	URL            string                  `json:"url"  envconfig:"IMMUNE_ENDPOINT_URL"`
+	Secret         string                  `json:"secret" envconfig:"IMMUNE_ENDPOINT_SECRET"`
+	Number         int                     `json:"number" envconfig:"IMMUNE_ENDPOINT_NUMBER"`
+	OwnerID        string                  `json:"owner_id" envconfig:"IMMUNE_ENDPOINT_OWNER_ID"`
+	Authentication *EndpointAuthentication `json:"authentication"`
 }
 
 type ApiKey struct {

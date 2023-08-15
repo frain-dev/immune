@@ -36,14 +36,16 @@ func (f *Fire) Init() error {
 		return fmt.Errorf("failed to create project: %v", err)
 	}
 
-	err = f.createEndpoint(ctx)
+	err = f.createEndpoints(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create endpoint: %v", err)
 	}
 
-	err = f.createSubscription(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create endpoint: %v", err)
+	for _, endpointID := range f.endpointIDs {
+		err = f.createSubscription(ctx, endpointID)
+		if err != nil {
+			return fmt.Errorf("failed to create endpoint: %v", err)
+		}
 	}
 
 	return nil
@@ -187,7 +189,7 @@ func (f *Fire) getProjectType() string {
 	}
 }
 
-func (f *Fire) createEndpoint(ctx context.Context) error {
+func (f *Fire) createEndpoints(ctx context.Context) error {
 	r := Request{
 		contentType: contentType,
 		url:         fmt.Sprintf("%s/api/v1/projects/%s/endpoints", f.cfg.ConvoyURL, f.ProjectID),
@@ -196,9 +198,9 @@ func (f *Fire) createEndpoint(ctx context.Context) error {
 	}
 
 	newEndpoint := &models.CreateEndpoint{
-		URL:                f.cfg.EndpointURL,
-		Secret:             f.cfg.EndpointSecret,
-		OwnerID:            "",
+		URL:                f.cfg.EndpointConfig.URL,
+		Secret:             f.cfg.EndpointConfig.Secret,
+		OwnerID:            f.cfg.EndpointConfig.OwnerID,
 		Description:        "immune test endpoint",
 		AdvancedSignatures: false,
 		Name:               "immune-endpoint",
@@ -211,24 +213,32 @@ func (f *Fire) createEndpoint(ctx context.Context) error {
 		return fmt.Errorf("failed to add json body: %v", err)
 	}
 
+	if f.cfg.EndpointConfig.Number > 1 && f.cfg.TestType != config.FanOutTest {
+		return fmt.Errorf("to create more than one endpoint, test type must be %s", config.FanOutTest)
+	}
+
+	if f.cfg.EndpointConfig.OwnerID == "" && f.cfg.TestType == config.FanOutTest {
+		return fmt.Errorf("owner id is request for %s test", config.FanOutTest)
+	}
+
 	endpoint := datastore.Endpoint{}
+	for i := 0; i < f.cfg.EndpointConfig.Number; i++ {
+		resp, err := r.SendRequest(ctx)
+		if err != nil {
+			return fmt.Errorf("request failed: %v", err)
+		}
 
-	resp, err := r.SendRequest(ctx)
-	if err != nil {
-		return fmt.Errorf("request failed: %v", err)
+		err = resp.DecodeJSON(&endpoint)
+		if err != nil {
+			return fmt.Errorf("failed to decode json body: %v", err)
+		}
+		f.endpointIDs = append(f.endpointIDs, endpoint.UID)
 	}
-
-	err = resp.DecodeJSON(&endpoint)
-	if err != nil {
-		return fmt.Errorf("failed to decode json body: %v", err)
-	}
-
-	f.endpointID = endpoint.UID
 
 	return nil
 }
 
-func (f *Fire) createSubscription(ctx context.Context) error {
+func (f *Fire) createSubscription(ctx context.Context, endpointID string) error {
 	r := Request{
 		contentType: contentType,
 		url:         fmt.Sprintf("%s/api/v1/projects/%s/subscriptions", f.cfg.ConvoyURL, f.ProjectID),
@@ -238,7 +248,7 @@ func (f *Fire) createSubscription(ctx context.Context) error {
 
 	newSubscription := &models.CreateSubscription{
 		Name:       "immune-subscription",
-		EndpointID: f.endpointID,
+		EndpointID: endpointID,
 		RetryConfig: &models.RetryConfiguration{
 			Type:            datastore.LinearStrategyProvider,
 			Duration:        "10s",

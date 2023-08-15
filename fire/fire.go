@@ -16,12 +16,13 @@ import (
 )
 
 type Fire struct {
-	cfg           *config.Config
-	jwtToken      string
-	ProjectApiKey string
-	ProjectID     string
-	orgID         string
-	endpointID    string
+	cfg             *config.Config
+	jwtToken        string
+	ProjectApiKey   string
+	ProjectID       string
+	orgID           string
+	endpointIDs     []string
+	endpointOwnerID string
 }
 
 func NewFire(cfg *config.Config) *Fire {
@@ -41,11 +42,7 @@ func (f *Fire) Start(ctx context.Context) (*Log, error) {
 		headers:     http.Header{"Authorization": []string{fmt.Sprintf("Bearer %s", f.ProjectApiKey)}},
 	}
 
-	err = r.WithJSONBody(models.CreateEvent{
-		EndpointID: f.endpointID,
-		EventType:  "immune.test",
-		Data:       payload,
-	})
+	err = r.WithJSONBody(f.getRequestBody())
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal event: %v", err)
@@ -89,4 +86,22 @@ func (f *Fire) Start(ctx context.Context) (*Log, error) {
 	l.CalculateStats()
 
 	return l, nil
+}
+
+func (f *Fire) getRequestBody() interface{} {
+	switch f.cfg.TestType {
+	case config.FanOutTest:
+		return &models.FanoutEvent{
+			OwnerID:   f.endpointOwnerID,
+			EventType: "immune.test",
+			Data:      payload,
+		}
+	default:
+		return &models.CreateEvent{
+			EndpointID: f.endpointIDs[0],
+			EventType:  "immune.test",
+			Data:       payload,
+		}
+
+	}
 }

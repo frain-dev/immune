@@ -10,16 +10,16 @@ type Authenticator interface {
 	Authenticate(r *http.Request) bool
 }
 
-func NewAuthenticator(cfg *config.Config) Authenticator {
-	if cfg.EndpointAuthentication == nil {
+func NewAuthenticator(cfg *config.EndpointConfig) Authenticator {
+	if cfg.Authentication == nil {
 		return noopAuthenticator{}
 	}
 
-	switch cfg.EndpointAuthentication.Type {
+	switch cfg.Authentication.Type {
 	case "api_key":
 		return &apiKeyAuthenticator{
-			headerName:  cfg.EndpointAuthentication.ApiKey.HeaderName,
-			headerValue: cfg.EndpointAuthentication.ApiKey.HeaderValue,
+			headerName:  cfg.Authentication.ApiKey.HeaderName,
+			headerValue: cfg.Authentication.ApiKey.HeaderValue,
 		}
 	default:
 		return noopAuthenticator{}
