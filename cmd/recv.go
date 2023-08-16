@@ -9,7 +9,7 @@ import (
 
 func addRecvCommand(a *App) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "fire",
+		Use:   "recv",
 		Short: "Fire events at a convoy instance",
 		Run: func(cmd *cobra.Command, args []string) {
 			rc := recv.NewReceiver(a.config)

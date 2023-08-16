@@ -1,18 +1,20 @@
 {
     "convoy_url": "http://127.0.0.1:5005",
-    "endpoint_url": "http://localhost:80",
     "endpoint_secret": "gertere",
-    "events": 3000,
-    "fire_log_file": "./logs/logger/log1.txt",
-    "recv_log_file": "./logs/logger/log1.txt",
-    "diff_log_file": "./logs/logger/log1.txt",
+    "events": 100,
+    "recv_port": 80,
+    "recv_timeout": 20,
+    "fire_log_file": "./logs/logger/fire-log.json",
+    "recv_log_file": "./logs/logger/recv-log.json",
+    "diff_log_file": "./logs/logger/diff-log.json",
     "test_type": "single",
     "endpoint_config": {
+        "url": "http://localhost:80",
         "secret": "gertere",
         "number": 1,
         "owner_id": "eft",
         "authentication": {
-            "type": "api_key",
+            "type": "",
             "api_key": {
                 "header_value": "",
                 "header_name": ""

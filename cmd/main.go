@@ -35,6 +35,7 @@ func main() {
 	cmd.PersistentFlags().StringVar(&configFile, "config", "./immune.json", "Configuration file for immune")
 
 	cmd.AddCommand(addFireCommand(a))
+	cmd.AddCommand(addRecvCommand(a))
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)

@@ -19,9 +19,9 @@ type Log struct {
 	SuccessRate       string `json:"success_rate"`
 
 	captureLock      sync.Mutex        // protects the fields below
-	EventsReceived   int               `json:"events_sent"`
+	EventsReceived   int               `json:"events_received"`
 	EventRecvTime    map[string]string `json:"event_recv_time"`
-	EventsDeliveries map[string]MI     `json:"event_count"`
+	EventsDeliveries map[string]MI     `json:"events_deliveries"`
 }
 
 type MI map[string]int
@@ -61,9 +61,16 @@ func (l *Log) CaptureHeaders(r *http.Request, now *time.Time) {
 	eventID := r.Header.Get(immune.DefaultEventIDHeader)
 	deliveryID := r.Header.Get(immune.DefaultEventDeliveryIDHeader)
 
-	l.EventRecvTime[eventID] = now.Format(time.RFC3339)
+	l.EventRecvTime[eventID] = now.UTC().Format(time.RFC3339)
 
-	l.EventsDeliveries[eventID][deliveryID]++
+	v := l.EventsDeliveries[eventID]
+	if v == nil {
+		v = MI{}
+	}
+
+	v[deliveryID]++
+
+	l.EventsDeliveries[eventID] = v
 
 	l.captureLock.Unlock()
 }

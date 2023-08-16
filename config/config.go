@@ -33,7 +33,7 @@ type Config struct {
 	RecvLogFile    string         `json:"recv_log_file" envconfig:"IMMUNE_RECV_LOG_FILE"`
 	DiffLogFile    string         `json:"diff_log_file" envconfig:"IMMUNE_DIFF_LOG_FILE"`
 	RecvTimeout    int            `json:"recv_timeout" envconfig:"IMMUNE_RECV_TIMEOUT"`
-	RecvPort       string         `json:"recv_port" envconfig:"IMMUNE_RECV_PORT"`
+	RecvPort       int            `json:"recv_port" envconfig:"IMMUNE_RECV_PORT"`
 }
 
 type EndpointConfig struct {

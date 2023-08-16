@@ -9,6 +9,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/frain-dev/convoy/pkg/verifier"
 	"github.com/frain-dev/immune"
 	"github.com/frain-dev/immune/auth"
@@ -25,17 +27,24 @@ type Receiver struct {
 
 func NewReceiver(cfg *config.Config) *Receiver {
 	port := cfg.RecvPort
-	if port == "" {
-		port = "80"
+	if port == 0 {
+		port = 80
 	}
-	return &Receiver{
+
+	rc := &Receiver{
 		cfg:           cfg,
 		authenticator: auth.NewAuthenticator(&cfg.EndpointConfig),
 		s: &http.Server{
-			Addr: ":" + cfg.RecvPort,
+			Addr: fmt.Sprintf(":%d", port),
 		},
 		l: NewLog(),
 	}
+
+	router := chi.NewRouter()
+	router.Post("/", rc.OK)
+
+	rc.s.Handler = router
+	return rc
 }
 
 func (rc *Receiver) OK(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +99,7 @@ func (rc *Receiver) Listen() *Log {
 	timeoutChan := make(chan struct{})
 
 	go func() {
-		t := time.Duration(rc.cfg.RecvTimeout)
+		t := time.Duration(rc.cfg.RecvTimeout) * time.Minute
 		if t == 0 {
 			t = time.Minute * 20
 		}
@@ -98,6 +107,8 @@ func (rc *Receiver) Listen() *Log {
 		close(timeoutChan)
 		fmt.Println("Receive timeout elapsed, shutting down server...")
 	}()
+
+	log.Infof("Recv server started")
 
 	rc.gracefulShutdown(timeoutChan)
 
