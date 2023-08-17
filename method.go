@@ -8,6 +8,14 @@ import (
 
 type Method string
 
+var (
+	DefaultSignatureHeader       = "X-Immune-Signature"
+	DefaultEventIDHeader         = "X-Convoy-Event-ID"
+	DefaultEventDeliveryIDHeader = "X-Convoy-EventDelivery-ID"
+	DefaultHash                  = "SHA256"
+	DefaultEncoding              = "hex"
+)
+
 const (
 	MethodPost    Method = "POST"
 	MethodPUT     Method = "PUT"

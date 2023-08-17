@@ -1,59 +1,24 @@
 {
-    "base_url": "http://127.0.0.1:5005/api/v1",
-    "callback": {
-        "port": 80,
-        "ssl": false,
-        "ssl_cert_file": "",
-        "ssl_key_file": "",
-        "max_wait_seconds": 20,
-        "route": "/",
-        "id_location": "data"
-    },
-    "database": {
-        "type": "mongo",
-        "dsn": "mongodb+srv://admin:7h5tAfZiYuCEe6KC42873272642331@cluster1.eqj2e.mongodb.net/convoy-immune"
-    },
-    "event_target_url": "https://5721-102-219-153-96.ngrok.io",
-    "test_cases": [
-        {
-            "name": "test_convoy_can_push_event_to_app_with_one_endpoint",
-            "setup": ["setup_group", "setup_app", "setup_endpoint", "setup_event"],
-            "http_method": "POST",
-            "endpoint": "/events?groupId={group_id}",
-            "callback": {
-                "enabled": true,
-                "times": 2
-            },
-            "request_body": {
-                "app_id": "{app_id}",
-                "event_type": "payment.failed",
-                "data": {
-                    "sc": "gene",
-                    "marvel": "stark"
-                }
-            },
-            "status_code": 201,
-            "response_body": true
-        },
-        {
-            "name": "test_convoy_can_push_event_to_app_with_two_endpoint",
-            "setup": ["setup_group", "setup_app", "setup_endpoint", "setup_endpoint"],
-            "http_method": "POST",
-            "endpoint": "/events?groupId={group_id}",
-            "callback": {
-                "enabled": true,
-                "times": 2
-            },
-            "request_body": {
-                "app_id": "{app_id}",
-                "event_type": "payment.failed",
-                "data": {
-                    "sc": "gene",
-                    "marvel": "stark"
-                }
-            },
-            "status_code": 201,
-            "response_body": true
+    "convoy_url": "http://127.0.0.1:5005",
+    "endpoint_secret": "gertere",
+    "events": 1000,
+    "recv_port": 80,
+    "recv_timeout": 20,
+    "fire_log_file": "./logs/logger/fire-log.json",
+    "recv_log_file": "./logs/logger/recv-log.json",
+    "diff_log_file": "./logs/logger/diff-log.json",
+    "test_type": "single",
+    "endpoint_config": {
+        "url": "http://localhost:80",
+        "secret": "gertere",
+        "number": 1,
+        "owner_id": "eft",
+        "authentication": {
+            "type": "",
+            "api_key": {
+                "header_value": "",
+                "header_name": ""
+            }
         }
-    ]
+    }
 }
