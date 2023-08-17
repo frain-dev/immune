@@ -64,7 +64,9 @@ func (f *Fire) Start(ctx context.Context) (*Log, error) {
 		resp, err = r.SendRequest(ctx)
 		if err != nil {
 			l.Failures++ // the request failed, record the status code
-			l.FailureCodes[resp.statusCode]++
+			if resp != nil {
+				l.FailureCodes[resp.statusCode]++
+			}
 			log.WithError(err).Error("send event request failed")
 			continue
 		}

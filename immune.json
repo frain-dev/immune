@@ -1,7 +1,7 @@
 {
     "convoy_url": "http://127.0.0.1:5005",
     "endpoint_secret": "gertere",
-    "events": 100,
+    "events": 1000,
     "recv_port": 80,
     "recv_timeout": 20,
     "fire_log_file": "./logs/logger/fire-log.json",

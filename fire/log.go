@@ -22,11 +22,17 @@ type Log struct {
 
 func NewLog(n int64) *Log {
 	return &Log{
-		EventsSent:       0,
-		Failures:         0,
-		RequestDurations: make([]int64, 0, n),
-		FailureCodes:     map[int]int{},
-		EventTime:        map[string]string{},
+		EventsSent:         0,
+		RequestDurations:   make([]int64, 0, n),
+		Failures:           0,
+		FailureCodes:       map[int]int{},
+		EventTime:          map[string]string{},
+		MinimumRequestTime: "",
+		MaximumRequestTime: "",
+		AverageRequestTime: "",
+		ErrorRate:          "",
+		SuccessRate:        "",
+		TotalTimeTaken:     "",
 	}
 }
 
@@ -40,7 +46,7 @@ func (l *Log) CalculateStats() {
 	l.ErrorRate = fmt.Sprintf("%.2f%%", errRate)
 	l.SuccessRate = fmt.Sprintf("%.2f%%", 100-errRate)
 
-	min, max, avg := analyzeDurations(l.RequestDurations)
+	min, max, avg := AnalyzeDurations(l.RequestDurations)
 	l.MinimumRequestTime = fmt.Sprintf("%d milliseconds", min)
 	l.MaximumRequestTime = fmt.Sprintf("%d milliseconds", max)
 	l.AverageRequestTime = fmt.Sprintf("%.2f milliseconds", avg)
@@ -51,7 +57,7 @@ func calculatePercentage(part, whole float64) float64 {
 	return (part / whole) * 100
 }
 
-func analyzeDurations(durations []int64) (int64, int64, float64) {
+func AnalyzeDurations(durations []int64) (int64, int64, float64) {
 	if len(durations) == 0 {
 		return 0, 0, 0
 	}
